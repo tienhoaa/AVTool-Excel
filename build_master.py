@@ -962,51 +962,51 @@ try {{
     # =========================================================================
     $form3 = $wb.VBProject.VBComponents.Add(3)
     $form3.Name = "frmNumberSeparator"
-    $form3.Properties.Item("Width").Value = 350
-    $form3.Properties.Item("Height").Value = 245
+    $form3.Properties.Item("Width").Value = 440
+    $form3.Properties.Item("Height").Value = 265
     $form3.Properties.Item("Caption").Value = "AVTool - Doi Dau Phan Cach So"
 
     # Header
     $hSep = $form3.Designer.Controls.Add("Forms.Label.1", "lblHeader")
     $hSep.Caption = "DOI DAU PHAN CACH SO"
-    $hSep.Left = 15; $hSep.Top = 12; $hSep.Width = 320; $hSep.Height = 18
+    $hSep.Left = 16; $hSep.Top = 12; $hSep.Width = 400; $hSep.Height = 18
 
     $sSep = $form3.Designer.Controls.Add("Forms.Label.1", "lblSub")
     $sSep.Caption = "Chuyen doi dau thap phan & hang nghin tuc thi trong Excel"
-    $sSep.Left = 15; $sSep.Top = 32; $sSep.Width = 320; $sSep.Height = 16
+    $sSep.Left = 16; $sSep.Top = 32; $sSep.Width = 400; $sSep.Height = 16
 
     # Frame
     $frSep = $form3.Designer.Controls.Add("Forms.Frame.1", "fraOptions")
     $frSep.Caption = " Tuy chon phan cach "
-    $frSep.Left = 15; $frSep.Top = 52; $frSep.Width = 310; $frSep.Height = 115
+    $frSep.Left = 16; $frSep.Top = 52; $frSep.Width = 398; $frSep.Height = 135
 
     # Radio options
     $opVN = $frSep.Controls.Add("Forms.OptionButton.1", "optVN")
-    $opVN.Caption = "Chuan Viet Nam: 1.234.567,89 (Phay thap phan)"
-    $opVN.Left = 15; $opVN.Top = 18; $opVN.Width = 280; $opVN.Height = 20
+    $opVN.Caption = "Chuan Viet Nam: 1.234.567,89 (Phay thap phan, Cham hang nghin)"
+    $opVN.Left = 16; $opVN.Top = 18; $opVN.Width = 370; $opVN.Height = 22
 
     $opUS = $frSep.Controls.Add("Forms.OptionButton.1", "optUS")
-    $opUS.Caption = "Chuan Quoc te/US: 1,234,567.89 (Cham thap phan)"
-    $opUS.Left = 15; $opUS.Top = 40; $opUS.Width = 280; $opUS.Height = 20
+    $opUS.Caption = "Chuan Quoc te/US: 1,234,567.89 (Cham thap phan, Phay hang nghin)"
+    $opUS.Left = 16; $opUS.Top = 44; $opUS.Width = 370; $opUS.Height = 22
 
     $opSys = $frSep.Controls.Add("Forms.OptionButton.1", "optSystem")
     $opSys.Caption = "Theo cai dat Windows (Use system separators)"
-    $opSys.Left = 15; $opSys.Top = 62; $opSys.Width = 280; $opSys.Height = 20
+    $opSys.Left = 16; $opSys.Top = 70; $opSys.Width = 370; $opSys.Height = 22
 
     $lbCur = $frSep.Controls.Add("Forms.Label.1", "lblCurrent")
     $lbCur.Caption = "Hien tai: ..."
-    $lbCur.Left = 15; $lbCur.Top = 86; $lbCur.Width = 280; $lbCur.Height = 24
+    $lbCur.Left = 16; $lbCur.Top = 98; $lbCur.Width = 370; $lbCur.Height = 28
     $lbCur.ForeColor = 0x808080
 
     # Buttons
     $btApp = $form3.Designer.Controls.Add("Forms.CommandButton.1", "btnApply")
     $btApp.Caption = "Ap dung"
-    $btApp.Left = 135; $btApp.Top = 175; $btApp.Width = 95; $btApp.Height = 28
+    $btApp.Left = 210; $btApp.Top = 196; $btApp.Width = 100; $btApp.Height = 28
     $btApp.Default = $true
 
     $btCls = $form3.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
     $btCls.Caption = "Dong"
-    $btCls.Left = 240; $btCls.Top = 175; $btCls.Width = 85; $btCls.Height = 28
+    $btCls.Left = 320; $btCls.Top = 196; $btCls.Width = 94; $btCls.Height = 28
     $btCls.Cancel = $true
 
     $fcode3 = @'
