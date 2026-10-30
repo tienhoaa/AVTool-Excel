@@ -5,6 +5,30 @@
 
 Option Explicit
 
+#If VBA7 Then
+    Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+#Else
+    Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+#End If
+
+Private Function UniTextCore(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\u")
+    Loop
+    UniTextCore = res
+End Function
+
+Private Function MsgBoxUniCore(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "") As Long
+    If Len(title) = 0 Then title = UniTextCore("AVTool")
+    MsgBoxUniCore = MessageBoxW(0, StrPtr(UniTextCore(prompt)), StrPtr(UniTextCore(title)), buttons)
+End Function
+
+
 
 Public gProtectFormula As Boolean
 Public gSkipShapes As Boolean
@@ -426,12 +450,128 @@ Public Sub ShowHelpDialog()
            vbInformation, "AVTool - Tro Giup"
 End Sub
 
+
+Public Sub UnhideAndHighlightRows()
+    On Error GoTo ErrHandle
+    Dim wb As Workbook, ws As Worksheet
+    Set wb = ActiveWorkbook
+    If wb Is Nothing Then
+        MsgBoxUniCore "\u0056\u0075\u0069\u0020\u006C\u00F2\u006E\u0067\u0020\u006D\u1EDF\u0020\u006D\u1ED9\u0074\u0020\u0066\u0069\u006C\u0065\u0020\u0045\u0078\u0063\u0065\u006C\u0020\u0074\u0072\u01B0\u1EDB\u0063\u0020\u006B\u0068\u0069\u0020\u0073\u1EED\u0020\u0064\u1EE5\u006E\u0067\u0021", vbExclamation, "AVTool"
+        Exit Sub
+    End If
+    
+    Dim promptMsg As String
+    promptMsg = "\u0042\u1EA1\u006E\u0020\u0063\u00F3\u0020\u006D\u0075\u1ED1\u006E\u0020\u006D\u1EDF\u0020\u0063\u00E1\u0063\u0020\u0064\u00F2\u006E\u0067\u0020\u1EA9\u006E\u0020\u0076\u00E0\u0020\u0062\u00F4\u0069\u0020\u006D\u00E0\u0075\u0020\u006B\u0069\u1EC3\u006D\u0020\u0073\u006F\u00E1\u0074\u0020\u006B\u0068\u00F4\u006E\u0067\u003F" & vbCrLf & vbCrLf & _
+                "- \u0043\u0068\u1ECD\u006E\u0020\u005B\u0059\u0065\u0073\u005D\u003A\u0020\u0043\u0068\u1EC9\u0020\u006D\u1EDF\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u0053\u0068\u0065\u0065\u0074\u0020\u0068\u0069\u1EC7\u006E\u0020\u0074\u1EA1\u0069\u0020\u0028" & ActiveSheet.Name & "\u0029" & vbCrLf & _
+                "- \u0043\u0068\u1ECD\u006E\u0020\u005B\u004E\u006F\u005D\u003A\u0020\u004D\u1EDF\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u0054\u004F\u00C0\u004E\u0020\u0042\u1ED8\u0020\u0063\u00E1\u0063\u0020\u0053\u0068\u0065\u0065\u0074\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u0046\u0069\u006C\u0065" & vbCrLf & _
+                "- \u0043\u0068\u1ECD\u006E\u0020\u005B\u0043\u0061\u006E\u0063\u0065\u006C\u005D\u003A\u0020\u0048\u1EE7\u0079\u0020\u0062\u1ECF"
+                
+    Dim ans As VbMsgBoxResult
+    ans = MsgBoxUniCore(promptMsg, vbYesNoCancel + vbQuestion, "\u0041\u0056\u0054\u006F\u006F\u006C\u0020\u002D\u0020\u004D\u1EDF\u0020\u0044\u00F2\u006E\u0067\u0020\u1EA8\u006E\u0020\u0026\u0020\u0042\u00F4\u0069\u0020\u004D\u00E0\u0075")
+    If ans = vbCancel Then Exit Sub
+    
+    Dim targetSheets As New Collection
+    If ans = vbYes Then
+        targetSheets.Add ActiveSheet
+    Else
+        Dim s As Worksheet
+        For Each s In wb.Worksheets
+            targetSheets.Add s
+        Next s
+    End If
+    
+    Dim totalHiddenRows As Long, totalSheetsFound As Long
+    Dim lastRow As Long, lastCol As Long, i As Long, rStart As Long, rEnd As Long
+    Dim sheetReport As String
+    
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    
+    For Each ws In targetSheets
+        If ws.ProtectContents Then
+            ' Skip or note protected sheets
+        Else
+            On Error Resume Next
+            ws.Outline.ShowLevels RowLevels:=8
+            On Error GoTo ErrHandle
+            
+            lastRow = ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1
+            lastCol = ws.UsedRange.Column + ws.UsedRange.Columns.Count - 1
+            If lastCol < 12 Then lastCol = 15
+            If lastRow > 100000 Then lastRow = 100000
+            
+            Dim countInSheet As Long
+            countInSheet = 0
+            
+            i = 1
+            Do While i <= lastRow
+                If ws.Rows(i).EntireRow.Hidden Then
+                    rStart = i
+                    Do While i + 1 <= lastRow
+                        If ws.Rows(i + 1).EntireRow.Hidden Then
+                            i = i + 1
+                        Else
+                            Exit Do
+                        End If
+                    Loop
+                    rEnd = i
+                    countInSheet = countInSheet + (rEnd - rStart + 1)
+                    
+                    ' Unhide
+                    ws.Rows(rStart & ":" & rEnd).EntireRow.Hidden = False
+                    
+                    ' Highlight soft yellow (RGB 255, 255, 153)
+                    ws.Range(ws.Cells(rStart, 1), ws.Cells(rEnd, lastCol)).Interior.Color = RGB(255, 255, 153)
+                End If
+                i = i + 1
+            Loop
+            
+            If countInSheet > 0 Then
+                totalSheetsFound = totalSheetsFound + 1
+                totalHiddenRows = totalHiddenRows + countInSheet
+                sheetReport = sheetReport & "- Sheet '" & ws.Name & "': " & countInSheet & " \u0064\u00F2\u006E\u0067" & vbCrLf
+            End If
+        End If
+    Next ws
+    
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    
+    If totalHiddenRows = 0 Then
+        MsgBoxUniCore "\u004B\u0068\u00F4\u006E\u0067\u0020\u0074\u00EC\u006D\u0020\u0074\u0068\u1EA5\u0079\u0020\u0064\u00F2\u006E\u0067\u0020\u006E\u00E0\u006F\u0020\u0062\u1ECB\u0020\u1EA9\u006E\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u0070\u0068\u1EA1\u006D\u0020\u0076\u0069\u0020\u0111\u00E3\u0020\u0063\u0068\u1ECD\u006E\u0021", vbInformation, "\u0041\u0056\u0054\u006F\u006F\u006C"
+    Else
+        Dim successMsg As String
+        successMsg = "\u0110\u00C3\u0020\u004D\u1EDF\u0020\u0056\u00C0\u0020\u0042\u00D4\u0049\u0020\u004D\u00C0\u0055\u0020\u0054\u0048\u00C0\u004E\u0048\u0020\u0043\u00D4\u004E\u0047\u0021" & vbCrLf & vbCrLf & _
+                     "\u0054\u1ED5\u006E\u0067\u0020\u0063\u1ED9\u006E\u0067\u003A\u0020" & totalHiddenRows & " \u0064\u00F2\u006E\u0067\u0020\u1EA9\u006E\u0020\u0074\u0072\u006F\u006E\u0067\u0020" & totalSheetsFound & " \u0073\u0068\u0065\u0065\u0074\u002E" & vbCrLf & vbCrLf & _
+                     sheetReport & vbCrLf & _
+                     "\u0043\u00E1\u0063\u0020\u0064\u00F2\u006E\u0067\u0020\u0111\u00E3\u0020\u0111\u01B0\u1EE3\u0063\u0020\u0074\u00F4\u0020\u006D\u00E0\u0075\u0020\u0076\u00E0\u006E\u0067\u0020\u006E\u0068\u1EA1\u0074\u0020\u0111\u1EC3\u0020\u0062\u1EA1\u006E\u0020\u0064\u1EC5\u0020\u0064\u00E0\u006E\u0067\u0020\u006B\u0069\u1EC3\u006D\u0020\u0073\u006F\u00E1\u0074\u002E"
+        MsgBoxUniCore successMsg, vbInformation, "\u0041\u0056\u0054\u006F\u006F\u006C\u0020\u002D\u0020\u004D\u1EDF\u0020\u0044\u00F2\u006E\u0067\u0020\u1EA8\u006E"
+    End If
+    Exit Sub
+    
+ErrHandle:
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+    MsgBoxUniCore "\u0043\u00F3\u0020\u006C\u1ED7\u0069\u0020\u0078\u1EA3\u0079\u0020\u0072\u0061\u003A\u0020" & Err.Description, vbCritical, "AVTool"
+End Sub
+
+Public Sub ShowNumberSeparatorForm()
+    On Error Resume Next
+    If Val(Application.Version) >= 12 Then
+        frmNumberSeparator.Show vbModeless
+    Else
+        frmNumberSeparator.Show
+    End If
+End Sub
+
 ' RIBBON CALLBACKS
 Public Sub Ribbon_OnAction(control As IRibbonControl)
     Select Case control.Id
         ' Form
         Case "btnOpenForm": ShowAVToolForm
         Case "btnInsertDValue": InsertDValueToActiveWorkbook
+        Case "btnChangeSeparators": ShowNumberSeparatorForm
+        Case "btnUnhideRows": UnhideAndHighlightRows
         Case "btnBatchPrint": ShowBatchPrintForm
         Case "btnCheckUpdate": CheckForUpdates False
         
@@ -629,7 +769,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.0.0"
+    currentVer = "2.1.0"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled

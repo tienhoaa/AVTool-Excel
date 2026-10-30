@@ -1,7 +1,7 @@
 {
-  "version": "2.0.0",
-  "latest_version": "2.0.0",
+  "version": "2.1.0",
+  "latest_version": "2.1.0",
   "release_date": "2026-10-30",
-  "changelog": "- Tinh nang moi: Loc va chon nhanh Sheet can in theo mau Tab (Tab Color)\n- Sua triet de loi hien thi dau tieng Viet tren hop thoai thong bao\n- Toi uu giao dien In Nhieu Sheet va DValue",
+  "changelog": "- Tinh nang moi: Bang chuyen doi dau phan cach so (, va .) chuan Viet Nam / Quoc te\n- Tinh nang moi: Mo tat ca dong an va boi mau vang de kiem soat\n- Tinh nang moi: Loc va chon nhanh Sheet can in theo mau Tab (Tab Color)\n- Sua triet de loi hien thi tieng Viet co dau tren popup thong bao",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

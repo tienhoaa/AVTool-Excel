@@ -579,6 +579,107 @@ Private Sub btnClose_Click()
 End Sub
 '''
 
+
+# Form 3: frmNumberSeparator Code
+code_frmNumberSeparator = f"""Option Explicit
+
+#If VBA7 Then
+    Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+#Else
+    Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+#End If
+
+Private Function UniText(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\\u")
+    Loop
+    UniText = res
+End Function
+
+Private Function MsgBoxUni(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "") As Long
+    If Len(title) = 0 Then title = UniText("{esc('AVTool - Đổi Dấu Phân Cách Số')}")
+    MsgBoxUni = MessageBoxW(0, StrPtr(UniText(prompt)), StrPtr(title), buttons)
+End Function
+
+Private Sub UserForm_Initialize()
+    On Error Resume Next
+    Dim c As Control
+    For Each c In Me.Controls
+        c.Font.Name = "Segoe UI"
+        c.Font.Size = 9
+    Next c
+    lblHeader.Font.Size = 10.5
+    lblHeader.Font.Bold = True
+    lblSub.Font.Size = 8.5
+    optVN.Font.Bold = True
+    optUS.Font.Bold = True
+    btnApply.Font.Bold = True
+    btnApply.Font.Size = 9.5
+    btnClose.Font.Size = 9.5
+    
+    Me.Caption = "AVTool - Doi Dau Phan Cach So"
+    lblHeader.Caption = UniText("{esc('ĐỔI DẤU PHÂN CÁCH SỐ')}")
+    lblSub.Caption = UniText("{esc('Chuyển đổi dấu thập phân & hàng nghìn tức thì trong Excel')}")
+    fraOptions.Caption = UniText("{esc(' Tùy chọn định dạng số ')}")
+    optVN.Caption = UniText("{esc('Chuẩn Việt Nam:  1.234.567,89  (Phẩy thập phân, Chấm hàng nghìn)')}")
+    optUS.Caption = UniText("{esc('Chuẩn Quốc tế/US: 1,234,567.89 (Chấm thập phân, Phẩy hàng nghìn)')}")
+    optSystem.Caption = UniText("{esc('Theo cài đặt Windows (Use system separators)')}")
+    btnApply.Caption = UniText("{esc('Áp dụng')}")
+    btnClose.Caption = UniText("{esc('Đóng')}")
+    
+    RefreshStatus
+End Sub
+
+Private Sub RefreshStatus()
+    On Error Resume Next
+    If Application.UseSystemSeparators Then
+        optSystem.Value = True
+        lblCurrent.Caption = UniText("{esc('Hiện tại: Theo cài đặt Windows (Thập phân: ')}") & Application.International(xlDecimalSeparator) & UniText("{esc(', Hàng nghìn: ')}") & Application.International(xlThousandsSeparator) & ")"
+    Else
+        If Application.DecimalSeparator = "," And Application.ThousandsSeparator = "." Then
+            optVN.Value = True
+            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Việt Nam (Thập phân: phẩy ",", Hàng nghìn: chấm ".")')}")
+        ElseIf Application.DecimalSeparator = "." And Application.ThousandsSeparator = "," Then
+            optUS.Value = True
+            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Quốc tế / US (Thập phân: chấm ".", Hàng nghìn: phẩy ",")')}")
+        Else
+            lblCurrent.Caption = UniText("{esc('Hiện tại: Tùy chỉnh (Thập phân: ')}") & Application.DecimalSeparator & UniText("{esc(', Hàng nghìn: ')}") & Application.ThousandsSeparator & ")"
+        End If
+    End If
+End Sub
+
+Private Sub btnApply_Click()
+    On Error GoTo ErrHandle
+    If optVN.Value Then
+        Application.UseSystemSeparators = False
+        Application.DecimalSeparator = ","
+        Application.ThousandsSeparator = "."
+        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Việt Nam thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu phẩy "," | Hàng nghìn: dấu chấm ".")')}", vbInformation
+    ElseIf optUS.Value Then
+        Application.UseSystemSeparators = False
+        Application.DecimalSeparator = "."
+        Application.ThousandsSeparator = ","
+        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Quốc tế / US thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu chấm "." | Hàng nghìn: dấu phẩy ",")')}", vbInformation
+    ElseIf optSystem.Value Then
+        Application.UseSystemSeparators = True
+        MsgBoxUni "{esc('Đã chuyển về Sử dụng dấu theo Hệ điều hành Windows (Use system separators)!')}", vbInformation
+    End If
+    RefreshStatus
+    Exit Sub
+ErrHandle:
+    MsgBoxUni "{esc('Lỗi khi thiết lập dấu phân cách: ')}" & Err.Description, vbCritical
+End Sub
+
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+"""
+
 ps_script = f"""
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
@@ -856,6 +957,64 @@ try {{
 '@
     $form2.CodeModule.AddFromString($fcode2)
 
+    # =========================================================================
+    # FORM 3: frmNumberSeparator (Professional Number Separators Switch Form)
+    # =========================================================================
+    $form3 = $wb.VBProject.VBComponents.Add(3)
+    $form3.Name = "frmNumberSeparator"
+    $form3.Properties.Item("Width").Value = 350
+    $form3.Properties.Item("Height").Value = 245
+    $form3.Properties.Item("Caption").Value = "AVTool - Doi Dau Phan Cach So"
+
+    # Header
+    $hSep = $form3.Designer.Controls.Add("Forms.Label.1", "lblHeader")
+    $hSep.Caption = "DOI DAU PHAN CACH SO"
+    $hSep.Left = 15; $hSep.Top = 12; $hSep.Width = 320; $hSep.Height = 18
+
+    $sSep = $form3.Designer.Controls.Add("Forms.Label.1", "lblSub")
+    $sSep.Caption = "Chuyen doi dau thap phan & hang nghin tuc thi trong Excel"
+    $sSep.Left = 15; $sSep.Top = 32; $sSep.Width = 320; $sSep.Height = 16
+
+    # Frame
+    $frSep = $form3.Designer.Controls.Add("Forms.Frame.1", "fraOptions")
+    $frSep.Caption = " Tuy chon phan cach "
+    $frSep.Left = 15; $frSep.Top = 52; $frSep.Width = 310; $frSep.Height = 115
+
+    # Radio options
+    $opVN = $frSep.Controls.Add("Forms.OptionButton.1", "optVN")
+    $opVN.Caption = "Chuan Viet Nam: 1.234.567,89 (Phay thap phan)"
+    $opVN.Left = 15; $opVN.Top = 18; $opVN.Width = 280; $opVN.Height = 20
+
+    $opUS = $frSep.Controls.Add("Forms.OptionButton.1", "optUS")
+    $opUS.Caption = "Chuan Quoc te/US: 1,234,567.89 (Cham thap phan)"
+    $opUS.Left = 15; $opUS.Top = 40; $opUS.Width = 280; $opUS.Height = 20
+
+    $opSys = $frSep.Controls.Add("Forms.OptionButton.1", "optSystem")
+    $opSys.Caption = "Theo cai dat Windows (Use system separators)"
+    $opSys.Left = 15; $opSys.Top = 62; $opSys.Width = 280; $opSys.Height = 20
+
+    $lbCur = $frSep.Controls.Add("Forms.Label.1", "lblCurrent")
+    $lbCur.Caption = "Hien tai: ..."
+    $lbCur.Left = 15; $lbCur.Top = 86; $lbCur.Width = 280; $lbCur.Height = 24
+    $lbCur.ForeColor = 0x808080
+
+    # Buttons
+    $btApp = $form3.Designer.Controls.Add("Forms.CommandButton.1", "btnApply")
+    $btApp.Caption = "Ap dung"
+    $btApp.Left = 135; $btApp.Top = 175; $btApp.Width = 95; $btApp.Height = 28
+    $btApp.Default = $true
+
+    $btCls = $form3.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
+    $btCls.Caption = "Dong"
+    $btCls.Left = 240; $btCls.Top = 175; $btCls.Width = 85; $btCls.Height = 28
+    $btCls.Cancel = $true
+
+    $fcode3 = @'
+{code_frmNumberSeparator}
+'@
+    $form3.CodeModule.AddFromString($fcode3)
+
+
     if (Test-Path '{temp_xlam}') {{ Remove-Item '{temp_xlam}' }}
     $wb.SaveAs('{temp_xlam}', 55)
     $wb.Close($false)
@@ -889,6 +1048,10 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
+        <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
+          <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
+          <button id="btnUnhideRows" label="Mở Dòng Ẩn &amp; Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+        </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
@@ -909,6 +1072,10 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         </group>
         <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
+          <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
+          <button id="btnUnhideRows" label="Mở Dòng Ẩn &amp; Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
