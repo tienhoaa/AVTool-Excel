@@ -1,7 +1,7 @@
 {
-  "version": "1.0.3",
-  "latest_version": "1.0.3",
+  "version": "1.0.4",
+  "latest_version": "1.0.4",
   "release_date": "2026-10-30",
-  "changelog": "- Nang cap toan bo nhan Ribbon sang Tieng Viet co dau chuan dep\n- Toi uu chuc nang In Nhieu Sheet va DValue",
+  "changelog": "- Tu dong kiem tra va thong bao cap nhat khi mo Excel\n- Nhan Ribbon Tieng Viet co dau chuan 100%\n- Hoan thien In Nhieu Sheet va DValue Du Toan",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }
