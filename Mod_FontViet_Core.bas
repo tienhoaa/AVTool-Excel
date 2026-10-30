@@ -620,7 +620,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim currentVer As String
     Dim ans As VbMsgBoxResult
     
-    currentVer = "1.0.1"
+    currentVer = "1.0.2"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled
@@ -657,12 +657,12 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
                      "- Phien ban ban dang dung: v" & currentVer & vbCrLf & _
                      "- Phien ban moi nhat: v" & remoteVer & vbCrLf & vbCrLf & _
                      "Noi dung cap nhat:" & vbCrLf & changeLog & vbCrLf & vbCrLf & _
-                     "Ban co muon mo trang GitHub de tai ban cap nhat khong?", vbQuestion + vbYesNo, "AVTool Update")
+                     "Ban co muon tu dong cap nhat ngay bay gio khong?", vbQuestion + vbYesNo, "AVTool Update")
         If ans = vbYes Then
             Dim batPath As String
             batPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
             If Dir$(batPath) <> "" Then
-                Shell  & batPath & , vbNormalFocus
+                Shell Chr(34) & batPath & Chr(34), vbNormalFocus
                 ThisWorkbook.Saved = True
                 Application.Quit
             Else
