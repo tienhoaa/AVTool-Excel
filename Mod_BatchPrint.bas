@@ -1,4 +1,3 @@
-Attribute VB_Name = "Mod_BatchPrint"
 Option Explicit
 
 Public Sub ShowBatchPrintForm()

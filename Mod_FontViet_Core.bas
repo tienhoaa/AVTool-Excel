@@ -5,12 +5,6 @@
 
 Option Explicit
 
-#If VBA7 Then
-    Private Declare PtrSafe Function URLDownloadToFile Lib "urlmon" Alias "URLDownloadToFileA" (ByVal pCaller As LongPtr, ByVal szURL As String, ByVal szFileName As String, ByVal dwReserved As Long, ByVal lpfnCB As LongPtr) As Long
-#Else
-    Private Declare Function URLDownloadToFile Lib "urlmon" Alias "URLDownloadToFileA" (ByVal pCaller As Long, ByVal szURL As String, ByVal szFileName As String, ByVal dwReserved As Long, ByVal lpfnCB As Long) As Long
-#End If
-
 
 Public gProtectFormula As Boolean
 Public gSkipShapes As Boolean
@@ -618,16 +612,6 @@ End Sub
 ' =========================================================
 ' AUTO-UPDATE ONLINE FROM GITHUB REPOSITORY
 ' =========================================================
-Public Sub Auto_Open()
-    On Error Resume Next
-    ' Tu dong kiem tra cap nhat sau 3 giay khi mo Excel
-    Application.OnTime Now + TimeValue("00:00:03"), "CheckForUpdatesSilent"
-End Sub
-
-Public Sub CheckForUpdatesSilent()
-    CheckForUpdates True
-End Sub
-
 Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim http As Object
     Dim jsonStr As String
@@ -636,6 +620,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim downUrl As String
     Dim currentVer As String
     Dim ans As VbMsgBoxResult
+    Dim updaterPath As String
     
     currentVer = "1.0.2"
     
@@ -678,7 +663,14 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
                      "--------------------------------------------------" & vbCrLf & _
                      "Ban co muon tu dong cap nhat ngay bay gio khong?", vbQuestion + vbYesNo, "AVTool Auto-Update")
         If ans = vbYes Then
-            DoAutoUpdateInPlace downUrl, remoteVer
+            updaterPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
+            If Dir$(updaterPath) <> "" Then
+                CreateObject("Shell.Application").Open updaterPath
+                ThisWorkbook.Saved = True
+                Application.Quit
+            Else
+                ThisWorkbook.FollowHyperlink downUrl
+            End If
         End If
     Else
         If Not bSilent Then
@@ -686,52 +678,6 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
                    "He thong luon san sang va da toi uu nhat.", vbInformation, "AVTool Update"
         End If
     End If
-End Sub
-
-Private Sub DoAutoUpdateInPlace(ByVal downloadUrl As String, ByVal newVer As String)
-    Dim tempXlam As String, batPath As String, targetPath As String
-    Dim res As Long, fNum As Integer
-    
-    targetPath = ThisWorkbook.FullName
-    tempXlam = Environ$("TEMP") & "\AVTool_Update.xlam"
-    batPath = Environ$("TEMP") & "\AVTool_ApplyUpdate.bat"
-    
-    On Error Resume Next
-    If Dir$(tempXlam) <> "" Then Kill tempXlam
-    If Dir$(batPath) <> "" Then Kill batPath
-    
-    Application.StatusBar = "Dang tai ban cap nhat moi tu GitHub, vui long doi..."
-    
-    ' 1. Tai file truc tiep bang Windows API URLDownloadToFile (100% an toan)
-    res = URLDownloadToFile(0, downloadUrl, tempXlam, 0, 0)
-    
-    If res <> 0 Or Dir$(tempXlam) = "" Then
-        MsgBox "Khong the tai ban cap nhat moi tu GitHub. Vui long kiem tra ket noi Internet!", vbCritical, "AVTool Update"
-        Application.StatusBar = False
-        Exit Sub
-    End If
-    
-    If FileLen(tempXlam) < 20000 Then
-        MsgBox "Tep tin tai ve bi loi hoac khong hoan tat!", vbCritical, "AVTool Update"
-        Application.StatusBar = False
-        Exit Sub
-    End If
-    
-    ' 2. Tao script copy de file sau khi Excel dong (chi co timeout & copy & start excel)
-    fNum = FreeFile
-    Open batPath For Output As #fNum
-    Print #fNum, "@echo off"
-    Print #fNum, "timeout /t 1 /nobreak >nul"
-    Print #fNum, "copy /y """ & tempXlam & """ """ & targetPath & """ >nul"
-    Print #fNum, "del /f /q """ & tempXlam & """ >nul"
-    Print #fNum, "start excel.exe"
-    Print #fNum, "(goto) 2>nul & del ""%~f0"""
-    Close #fNum
-    
-    ' 3. Thuc thi cap nhat va thoat Excel de ghi de
-    Shell Chr(34) & batPath & Chr(34), vbHide
-    ThisWorkbook.Saved = True
-    Application.Quit
 End Sub
 
 Private Function ExtractJsonVal(ByVal json As String, ByVal key As String) As String
