@@ -431,6 +431,7 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         ' Form
         Case "btnOpenForm": ShowAVToolForm
         Case "btnInsertDValue": InsertDValueToActiveWorkbook
+        Case "btnBatchPrint": ShowBatchPrintForm
         Case "btnCheckUpdate": CheckForUpdates False
         
         ' Scope
@@ -658,7 +659,15 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
                      "Noi dung cap nhat:" & vbCrLf & changeLog & vbCrLf & vbCrLf & _
                      "Ban co muon mo trang GitHub de tai ban cap nhat khong?", vbQuestion + vbYesNo, "AVTool Update")
         If ans = vbYes Then
-            ThisWorkbook.FollowHyperlink downUrl
+            Dim batPath As String
+            batPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
+            If Dir$(batPath) <> "" Then
+                Shell  & batPath & , vbNormalFocus
+                ThisWorkbook.Saved = True
+                Application.Quit
+            Else
+                ThisWorkbook.FollowHyperlink downUrl
+            End If
         End If
     Else
         If Not bSilent Then

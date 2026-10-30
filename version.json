@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1",
-  "latest_version": "1.0.1",
+  "version": "1.0.2",
+  "latest_version": "1.0.2",
   "release_date": "2026-10-30",
-  "changelog": "- Giao dien Form Tieng Viet co dau chuan, khong bi cat chu\n- Ham DValue ho tro ngoac tron (), vuong [], nhon {}, bo qua don vi m, m2, kg...\n- Tu dong hien hop thoai Save As luu giu Macro\n- Cap nhat he thong on dinh va bao mat 100%",
-  "download_url": "https://github.com/tienhoaa/AVTool-Excel/raw/main/TN_FontViet_Pro_2026.xlam"
+  "changelog": "- Them chuc nang In Nhieu Sheet (Batch Print Preview) giao dien 2 cot cuc tien loi\n- Ho tro sap xep thu tu in, xem truoc Print Preview chuan cua Excel\n- Tu dong cap nhat online 1-click muot ma, an toan 100%",
+  "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

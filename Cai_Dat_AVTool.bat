@@ -3,7 +3,7 @@ chcp 65001 >nul
 title Cai Dat AVTool Pro - Microsoft Excel
 
 echo ================================================================
-echo        DANG CAI DAT AVTOOL PRO (DOI FONT & TINH DVALUE)...
+echo        DANG CAI DAT AVTOOL PRO (DOI FONT, DVALUE & IN AN)...
 echo ================================================================
 echo.
 
@@ -34,8 +34,11 @@ if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 del /f /q "%APPDATA%\Microsoft\Excel\XLSTART\AVTool_FontViet.xlam" >nul 2>&1
 del /f /q "%APPDATA%\Microsoft\Excel\XLSTART\TN_FontViet_Pro_2026.xlam" >nul 2>&1
 
-:: 4. Copy file add-in vao thu muc AddIns
+:: 4. Copy file add-in va file ho tro cap nhat vao thu muc AddIns
 copy /y "%~dp0TN_FontViet_Pro_2026.xlam" "%TARGET_DIR%\TN_FontViet_Pro_2026.xlam" >nul
+if exist "%~dp0Cap_Nhat_Online.bat" (
+    copy /y "%~dp0Cap_Nhat_Online.bat" "%TARGET_DIR%\Cap_Nhat_Online.bat" >nul
+)
 
 :: 5. Bo chan bao mat cua Windows (Unblock)
 powershell -Command "Unblock-File -Path '%TARGET_DIR%\TN_FontViet_Pro_2026.xlam' -ErrorAction SilentlyContinue"
@@ -53,6 +56,7 @@ echo Tu bay gio:
 echo  - Moi khi ban mo Excel, tren thanh menu se co ngay tab [AVTool].
 echo  - Nut [Doi Font Tieng Viet]: Chuyen font TCVN3, VNI -> Unicode (Khong mat cong thuc).
 echo  - Nut [Chen DValue Vao File]: Tinh khoi luong tu chu va tu hien Save As luu file .xls/.xlsm.
+echo  - Nut [In Nhieu Sheet]: Form 2 cot chon sheet can in, doi thu tu va xem Print Preview.
 echo  - Nut [Cap Nhat Ban Moi]: Kiem tra va cap nhat phien ban tu GitHub.
 echo.
 echo ================================================================

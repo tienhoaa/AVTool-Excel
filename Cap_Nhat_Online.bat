@@ -7,8 +7,10 @@ echo          DANG KIEM TRA VA TAI BAN CAP NHAT MOI NHAT...
 echo ================================================================
 echo.
 
-:: 1. Tat Excel neu dang mo
+:: 1. Tat Excel neu dang mo de tranh bi khoa file
+echo Dang dong Excel de cap nhat file...
 taskkill /f /im excel.exe >nul 2>&1
+timeout /t 1 /nobreak >nul
 
 :: 2. Duong dan dich
 set "TARGET_DIR=%APPDATA%\Microsoft\AddIns"
@@ -19,18 +21,23 @@ if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 
 :: 3. Tai truc tiep tu GitHub
 echo Dang tai ban moi nhat tu GitHub tienhoaa/AVTool-Excel...
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('%DOWNLOAD_URL%', '%TARGET_FILE%'); Unblock-File -Path '%TARGET_FILE%'"
+where curl >nul 2>&1
+if %errorlevel% equ 0 (
+    curl -L -s -o "%TARGET_FILE%" "%DOWNLOAD_URL%"
+) else (
+    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('%DOWNLOAD_URL%', '%TARGET_FILE%')"
+)
+powershell -Command "Unblock-File -Path '%TARGET_FILE%' -ErrorAction SilentlyContinue"
 
 if exist "%TARGET_FILE%" (
     echo.
     echo ================================================================
     echo        [OK] DA CAP NHAT AVTOOL PRO THANH CONG!
     echo ================================================================
-    echo Ban co the mo Excel len de su dung ngay phien ban moi nhat.
+    echo Dang khoi dong lai Excel...
+    start excel.exe
 ) else (
     echo.
     echo [!] Khong the tai ban cap nhat. Vui long kiem tra ket noi mang!
+    pause
 )
-
-echo.
-pause

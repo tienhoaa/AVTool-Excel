@@ -1,12 +1,14 @@
-import os, sys, zipfile, subprocess, shutil
+import os, sys, zipfile, subprocess, shutil, time
 
 workspace = r"C:\Users\GAMING-PC\Downloads\TN-FONTVIET-R8"
 bas_core = os.path.join(workspace, "Mod_FontViet_Core.bas")
 bas_dval = os.path.join(workspace, "Mod_DValue.bas")
+bas_print = os.path.join(workspace, "Mod_BatchPrint.bas")
 temp_xlam = os.path.join(workspace, "temp_addon.xlam")
 final_xlam = os.path.join(workspace, "TN_FontViet_Pro_2026.xlam")
 
 subprocess.run(["powershell", "-Command", "Stop-Process -Name 'EXCEL' -Force -ErrorAction SilentlyContinue"])
+time.sleep(1)
 
 def esc(text):
     out = []
@@ -17,7 +19,8 @@ def esc(text):
             out.append(ch)
     return "".join(out)
 
-elements = [
+# Form 1: frmAVTool Captions
+elements_avtool = [
     ("Me.Caption", "AVTool - Chuyen Doi Font Tieng Viet Pro"),
     ("lblHeader.Caption", "AVTOOL - CHUYỂN ĐỔI FONT TIẾNG VIỆT"),
     ("lblSub.Caption", "Tự động nhận diện TCVN3, VNI → Unicode | Bảo toàn 100% công thức"),
@@ -46,15 +49,15 @@ elements = [
     ("btnClose.Caption", "Đóng")
 ]
 
-lines = []
-for var, val in elements:
+lines_avtool = []
+for var, val in elements_avtool:
     if var == "Me.Caption":
-        lines.append(f'    {var} = "{val}"')
+        lines_avtool.append(f'    {var} = "{val}"')
     else:
-        lines.append(f'    {var} = UniText("{esc(val)}")')
-captions_code = "\n".join(lines)
+        lines_avtool.append(f'    {var} = UniText("{esc(val)}")')
+captions_avtool = "\n".join(lines_avtool)
 
-form_code = f'''
+code_frmAVTool = f'''
 Private Function UniText(ByVal s As String) As String
     Dim pos As Long, hexStr As String, res As String
     res = s
@@ -92,7 +95,7 @@ Private Sub UserForm_Initialize()
     btnExecute.Font.Size = 9.5
     btnClose.Font.Size = 9.5
     
-{captions_code}
+{captions_avtool}
 End Sub
 
 Private Sub btnExecute_Click()
@@ -147,6 +150,216 @@ Private Sub btnExecute_Click()
 End Sub
 '''
 
+# Form 2: frmBatchPrint Captions & Code
+elements_batchprint = [
+    ("Me.Caption", "AVTool - In Nhieu Sheet (Batch Print Preview)"),
+    ("lblHeader.Caption", "AVTOOL - IN NHIỀU SHEET (PRINT PREVIEW)"),
+    ("lblSub.Caption", "Chọn sheet từ cột bên trái chuyển sang cột bên phải để xem trước hoặc in"),
+    ("fraSource.Caption", " Sheet trong Workbook "),
+    ("fraTarget.Caption", " Danh sách Sheet cần in "),
+    ("chkAllVisible.Caption", "Chỉ hiển thị các Sheet không bị ẩn"),
+    ("btnPreview.Caption", "Xem trước (Print Preview)"),
+    ("btnPrint.Caption", "In trực tiếp"),
+    ("btnClose.Caption", "Đóng"),
+    ("btnAddOne.Caption", ">"),
+    ("btnAddAll.Caption", ">>"),
+    ("btnRemoveOne.Caption", "<"),
+    ("btnRemoveAll.Caption", "<<"),
+    ("btnMoveUp.Caption", "Lên"),
+    ("btnMoveDown.Caption", "Xuống")
+]
+
+lines_batchprint = []
+for var, val in elements_batchprint:
+    if var == "Me.Caption":
+        lines_batchprint.append(f'    {var} = "{val}"')
+    else:
+        lines_batchprint.append(f'    {var} = UniText("{esc(val)}")')
+captions_batchprint = "\n".join(lines_batchprint)
+
+code_frmBatchPrint = f'''
+Private Function UniText(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\\u")
+    Loop
+    UniText = res
+End Function
+
+Private Sub UserForm_Initialize()
+    On Error Resume Next
+    Dim c As Control
+    For Each c In Me.Controls
+        c.Font.Name = "Segoe UI"
+        c.Font.Size = 9
+    Next c
+    lblHeader.Font.Size = 11
+    lblHeader.Font.Bold = True
+    lblSub.Font.Size = 8.5
+    btnPreview.Font.Bold = True
+    btnPreview.Font.Size = 9.5
+    btnPrint.Font.Size = 9.5
+    btnClose.Font.Size = 9.5
+    
+    btnAddOne.Font.Bold = True
+    btnAddAll.Font.Bold = True
+    btnRemoveOne.Font.Bold = True
+    btnRemoveAll.Font.Bold = True
+    btnMoveUp.Font.Bold = True
+    btnMoveDown.Font.Bold = True
+    
+    chkAllVisible.Value = True
+{captions_batchprint}
+    LoadSheets
+End Sub
+
+Private Sub LoadSheets()
+    lstSource.Clear
+    lstTarget.Clear
+    If ActiveWorkbook Is Nothing Then Exit Sub
+    Dim ws As Object
+    For Each ws In ActiveWorkbook.Sheets
+        If chkAllVisible.Value Then
+            If ws.Visible = -1 Then ' xlSheetVisible
+                lstSource.AddItem ws.Name
+            End If
+        Else
+            lstSource.AddItem ws.Name
+        End If
+    Next ws
+End Sub
+
+Private Sub chkAllVisible_Click()
+    LoadSheets
+End Sub
+
+Private Sub btnAddOne_Click()
+    Dim i As Long
+    For i = lstSource.ListCount - 1 To 0 Step -1
+        If lstSource.Selected(i) Then
+            lstTarget.AddItem lstSource.List(i)
+            lstSource.RemoveItem i
+        End If
+    Next i
+End Sub
+
+Private Sub btnAddAll_Click()
+    Dim i As Long
+    For i = 0 To lstSource.ListCount - 1
+        lstTarget.AddItem lstSource.List(i)
+    Next i
+    lstSource.Clear
+End Sub
+
+Private Sub btnRemoveOne_Click()
+    Dim i As Long
+    For i = lstTarget.ListCount - 1 To 0 Step -1
+        If lstTarget.Selected(i) Then
+            lstSource.AddItem lstTarget.List(i)
+            lstTarget.RemoveItem i
+        End If
+    Next i
+End Sub
+
+Private Sub btnRemoveAll_Click()
+    Dim i As Long
+    For i = 0 To lstTarget.ListCount - 1
+        lstSource.AddItem lstTarget.List(i)
+    Next i
+    lstTarget.Clear
+End Sub
+
+Private Sub lstSource_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+    btnAddOne_Click
+End Sub
+
+Private Sub lstTarget_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
+    btnRemoveOne_Click
+End Sub
+
+Private Sub btnMoveUp_Click()
+    Dim idx As Long, temp As String
+    idx = lstTarget.ListIndex
+    If idx > 0 Then
+        temp = lstTarget.List(idx)
+        lstTarget.List(idx) = lstTarget.List(idx - 1)
+        lstTarget.List(idx - 1) = temp
+        lstTarget.Selected(idx - 1) = True
+    End If
+End Sub
+
+Private Sub btnMoveDown_Click()
+    Dim idx As Long, temp As String
+    idx = lstTarget.ListIndex
+    If idx >= 0 And idx < lstTarget.ListCount - 1 Then
+        temp = lstTarget.List(idx)
+        lstTarget.List(idx) = lstTarget.List(idx + 1)
+        lstTarget.List(idx + 1) = temp
+        lstTarget.Selected(idx + 1) = True
+    End If
+End Sub
+
+Private Sub btnPreview_Click()
+    If lstTarget.ListCount = 0 Then
+        MsgBox UniText("Vui l\u00F2ng ch\u1ECDn \u00EDt nh\u1EA5t m\u1ED9t sheet c\u1EA7n in!"), vbExclamation, "AVTool - In Nhieu Sheet"
+        Exit Sub
+    End If
+    
+    Dim arr() As String, i As Long
+    ReDim arr(0 To lstTarget.ListCount - 1)
+    For i = 0 To lstTarget.ListCount - 1
+        arr(i) = lstTarget.List(i)
+    Next i
+    
+    Dim actSheet As Object
+    Set actSheet = ActiveSheet
+    
+    Me.Hide
+    On Error Resume Next
+    ActiveWorkbook.Sheets(arr).Select
+    ActiveWindow.SelectedSheets.PrintPreview
+    
+    If Not actSheet Is Nothing Then actSheet.Select
+    Me.Show vbModeless
+End Sub
+
+Private Sub btnPrint_Click()
+    If lstTarget.ListCount = 0 Then
+        MsgBox UniText("Vui l\u00F2ng ch\u1ECDn \u00EDt nh\u1EA5t m\u1ED9t sheet c\u1EA7n in!"), vbExclamation, "AVTool - In Nhieu Sheet"
+        Exit Sub
+    End If
+    
+    Dim ans As VbMsgBoxResult
+    ans = MsgBox(UniText("B\u1EA1n c\u00F3 ch\u1EAFc ch\u1EAFn mu\u1ED1n in tr\u1EF1c ti\u1EBFp ") & lstTarget.ListCount & UniText(" sheet \u0111\u00E3 ch\u1ECDn ra m\u00E1y in m\u1EB7c \u0111\u1ECBnh kh\u00F4ng?"), vbQuestion + vbYesNo, "AVTool - In Nhieu Sheet")
+    If ans <> vbYes Then Exit Sub
+    
+    Dim arr() As String, i As Long
+    ReDim arr(0 To lstTarget.ListCount - 1)
+    For i = 0 To lstTarget.ListCount - 1
+        arr(i) = lstTarget.List(i)
+    Next i
+    
+    Dim actSheet As Object
+    Set actSheet = ActiveSheet
+    
+    Me.Hide
+    On Error Resume Next
+    ActiveWorkbook.Sheets(arr).Select
+    ActiveWindow.SelectedSheets.PrintOut
+    
+    If Not actSheet Is Nothing Then actSheet.Select
+    Me.Show vbModeless
+End Sub
+
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+'''
+
 ps_script = f"""
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
@@ -165,25 +378,31 @@ try {{
     $modDval.Name = "Mod_DValue"
     $codeDval = [System.IO.File]::ReadAllText('{bas_dval}', [System.Text.Encoding]::ASCII)
     $modDval.CodeModule.AddFromString($codeDval)
+
+    # 3. Add Mod_BatchPrint
+    $modPrint = $wb.VBProject.VBComponents.Add(1)
+    $modPrint.Name = "Mod_BatchPrint"
+    $codePrint = [System.IO.File]::ReadAllText('{bas_print}', [System.Text.Encoding]::ASCII)
+    $modPrint.CodeModule.AddFromString($codePrint)
     
-    # 3. Add UserForm
-    $form = $wb.VBProject.VBComponents.Add(3)
-    $form.Name = "frmAVTool"
-    $form.Properties.Item("Caption").Value = "AVTool - Chuyen Doi Font Tieng Viet Pro"
-    $form.Properties.Item("Width").Value = 440
-    $form.Properties.Item("Height").Value = 460
+    # 4. Add UserForm frmAVTool
+    $form1 = $wb.VBProject.VBComponents.Add(3)
+    $form1.Name = "frmAVTool"
+    $form1.Properties.Item("Caption").Value = "AVTool - Chuyen Doi Font Tieng Viet Pro"
+    $form1.Properties.Item("Width").Value = 440
+    $form1.Properties.Item("Height").Value = 460
 
     # Header Title Label
-    $lblTitle = $form.Designer.Controls.Add("Forms.Label.1", "lblHeader")
+    $lblTitle = $form1.Designer.Controls.Add("Forms.Label.1", "lblHeader")
     $lblTitle.Caption = "AVTOOL - CHUYEN DOI FONT TIENG VIET"
     $lblTitle.Left = 16; $lblTitle.Top = 10; $lblTitle.Width = 400; $lblTitle.Height = 20
 
-    $lblSub = $form.Designer.Controls.Add("Forms.Label.1", "lblSub")
+    $lblSub = $form1.Designer.Controls.Add("Forms.Label.1", "lblSub")
     $lblSub.Caption = "Tu dong nhan dien TCVN3, VNI -> Unicode | An toan cong thuc 100%"
     $lblSub.Left = 16; $lblSub.Top = 30; $lblSub.Width = 400; $lblSub.Height = 18
 
     # Frame 1: Bang ma nguon
-    $frSrc = $form.Designer.Controls.Add("Forms.Frame.1", "fraSource")
+    $frSrc = $form1.Designer.Controls.Add("Forms.Frame.1", "fraSource")
     $frSrc.Caption = " Bang ma nguon "
     $frSrc.Left = 14; $frSrc.Top = 52; $frSrc.Width = 200; $frSrc.Height = 118
 
@@ -204,7 +423,7 @@ try {{
     $opt4.Left = 8; $opt4.Top = 90; $opt4.Width = 185
 
     # Frame 2: Bang ma dich
-    $frDst = $form.Designer.Controls.Add("Forms.Frame.1", "fraTarget")
+    $frDst = $form1.Designer.Controls.Add("Forms.Frame.1", "fraTarget")
     $frDst.Caption = " Bang ma dich "
     $frDst.Left = 222; $frDst.Top = 52; $frDst.Width = 200; $frDst.Height = 118
 
@@ -221,7 +440,7 @@ try {{
     $optD3.Left = 8; $optD3.Top = 82; $optD3.Width = 185
 
     # Frame 3: Pham vi
-    $frScope = $form.Designer.Controls.Add("Forms.Frame.1", "fraScope")
+    $frScope = $form1.Designer.Controls.Add("Forms.Frame.1", "fraScope")
     $frScope.Caption = " Pham vi ap dung "
     $frScope.Left = 14; $frScope.Top = 176; $frScope.Width = 408; $frScope.Height = 50
 
@@ -238,7 +457,7 @@ try {{
     $opSc3.Left = 285; $opSc3.Top = 18; $opSc3.Width = 115
 
     # Frame 4: An Toan
-    $frSafe = $form.Designer.Controls.Add("Forms.Frame.1", "fraSafety")
+    $frSafe = $form1.Designer.Controls.Add("Forms.Frame.1", "fraSafety")
     $frSafe.Caption = " Tuy chon an toan & Bao ve "
     $frSafe.Left = 14; $frSafe.Top = 232; $frSafe.Width = 408; $frSafe.Height = 65
 
@@ -251,7 +470,7 @@ try {{
     $chk2.Left = 12; $chk2.Top = 38; $chk2.Width = 385
 
     # Frame 5: Kieu chu
-    $frCase = $form.Designer.Controls.Add("Forms.Frame.1", "fraCase")
+    $frCase = $form1.Designer.Controls.Add("Forms.Frame.1", "fraCase")
     $frCase.Caption = " Kieu chu (Tuy chon) "
     $frCase.Left = 14; $frCase.Top = 303; $frCase.Width = 408; $frCase.Height = 46
 
@@ -271,26 +490,112 @@ try {{
     $opC3.Caption = "Hoa Dau Tu"
     $opC3.Left = 310; $opC3.Top = 16; $opC3.Width = 90
 
-    # Buttons
-    $btnExec = $form.Designer.Controls.Add("Forms.CommandButton.1", "btnExecute")
+    # Buttons Form 1
+    $btnExec = $form1.Designer.Controls.Add("Forms.CommandButton.1", "btnExecute")
     $btnExec.Caption = "THUC HIEN CHUYEN DOI"
     $btnExec.Left = 40; $btnExec.Top = 362; $btnExec.Width = 230; $btnExec.Height = 34
     $btnExec.Default = $true
 
-    $btnCl = $form.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
+    $btnCl = $form1.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
     $btnCl.Caption = "Dong"
     $btnCl.Left = 290; $btnCl.Top = 362; $btnCl.Width = 110; $btnCl.Height = 34
     $btnCl.Cancel = $true
 
-    $fcode = @'
-{form_code}
+    $fcode1 = @'
+{code_frmAVTool}
 '@
-    $form.CodeModule.AddFromString($fcode)
+    $form1.CodeModule.AddFromString($fcode1)
+
+    # 5. Add UserForm frmBatchPrint (2 Columns)
+    $form2 = $wb.VBProject.VBComponents.Add(3)
+    $form2.Name = "frmBatchPrint"
+    $form2.Properties.Item("Caption").Value = "AVTool - In Nhieu Sheet (Batch Print Preview)"
+    $form2.Properties.Item("Width").Value = 495
+    $form2.Properties.Item("Height").Value = 430
+
+    # Header Title
+    $lblH2 = $form2.Designer.Controls.Add("Forms.Label.1", "lblHeader")
+    $lblH2.Caption = "AVTOOL - IN NHIEU SHEET (PRINT PREVIEW)"
+    $lblH2.Left = 16; $lblH2.Top = 10; $lblH2.Width = 450; $lblH2.Height = 20
+
+    $lblS2 = $form2.Designer.Controls.Add("Forms.Label.1", "lblSub")
+    $lblS2.Caption = "Chon sheet tu cot ben trai chuyen sang cot ben phai de in"
+    $lblS2.Left = 16; $lblS2.Top = 28; $lblS2.Width = 450; $lblS2.Height = 18
+
+    # Frame Col 1: Source
+    $frS1 = $form2.Designer.Controls.Add("Forms.Frame.1", "fraSource")
+    $frS1.Caption = " Sheet trong Workbook "
+    $frS1.Left = 14; $frS1.Top = 48; $frS1.Width = 180; $frS1.Height = 270
+
+    $lstS = $frS1.Controls.Add("Forms.ListBox.1", "lstSource")
+    $lstS.Left = 6; $lstS.Top = 16; $lstS.Width = 166; $lstS.Height = 244
+    $lstS.MultiSelect = 1
+
+    # Buttons Transfer (Middle)
+    $bA1 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnAddOne")
+    $bA1.Caption = ">"
+    $bA1.Left = 202; $bA1.Top = 100; $bA1.Width = 36; $bA1.Height = 26
+
+    $bAA = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnAddAll")
+    $bAA.Caption = ">>"
+    $bAA.Left = 202; $bAA.Top = 132; $bAA.Width = 36; $bAA.Height = 26
+
+    $bR1 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnRemoveOne")
+    $bR1.Caption = "<"
+    $bR1.Left = 202; $bR1.Top = 174; $bR1.Width = 36; $bR1.Height = 26
+
+    $bRA = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnRemoveAll")
+    $bRA.Caption = "<<"
+    $bRA.Left = 202; $bRA.Top = 206; $bRA.Width = 36; $bRA.Height = 26
+
+    # Frame Col 2: Target
+    $frT1 = $form2.Designer.Controls.Add("Forms.Frame.1", "fraTarget")
+    $frT1.Caption = " Danh sach Sheet can in "
+    $frT1.Left = 246; $frT1.Top = 48; $frT1.Width = 180; $frT1.Height = 270
+
+    $lstT = $frT1.Controls.Add("Forms.ListBox.1", "lstTarget")
+    $lstT.Left = 6; $lstT.Top = 16; $lstT.Width = 166; $lstT.Height = 244
+    $lstT.MultiSelect = 1
+
+    # Buttons Order (Right)
+    $bUp = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnMoveUp")
+    $bUp.Caption = "Len"
+    $bUp.Left = 432; $bUp.Top = 135; $bUp.Width = 42; $bUp.Height = 28
+
+    $bDown = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnMoveDown")
+    $bDown.Caption = "Xuong"
+    $bDown.Left = 432; $bDown.Top = 175; $bDown.Width = 42; $bDown.Height = 28
+
+    # Options CheckBox
+    $chkVis = $form2.Designer.Controls.Add("Forms.CheckBox.1", "chkAllVisible")
+    $chkVis.Caption = "Chi hien thi cac Sheet khong bi an"
+    $chkVis.Left = 14; $chkVis.Top = 324; $chkVis.Width = 300; $chkVis.Height = 18
+    $chkVis.Value = $true
+
+    # Bottom Actions Buttons
+    $bPrev = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnPreview")
+    $bPrev.Caption = "Xem truoc (Print Preview)"
+    $bPrev.Left = 110; $bPrev.Top = 352; $bPrev.Width = 175; $bPrev.Height = 32
+    $bPrev.Default = $true
+
+    $bPrn = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnPrint")
+    $bPrn.Caption = "In truc tiep"
+    $bPrn.Left = 295; $bPrn.Top = 352; $bPrn.Width = 95; $bPrn.Height = 32
+
+    $bCl2 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
+    $bCl2.Caption = "Dong"
+    $bCl2.Left = 400; $bCl2.Top = 352; $bCl2.Width = 72; $bCl2.Height = 32
+    $bCl2.Cancel = $true
+
+    $fcode2 = @'
+{code_frmBatchPrint}
+'@
+    $form2.CodeModule.AddFromString($fcode2)
 
     if (Test-Path '{temp_xlam}') {{ Remove-Item '{temp_xlam}' }}
     $wb.SaveAs('{temp_xlam}', 55)
     $wb.Close($false)
-    Write-Host "Temp XLAM generated with Form & DValue."
+    Write-Host "Temp XLAM generated with Form & DValue & BatchPrint."
 }} catch {{
     Write-Host "Error: " $_.Exception.Message
     exit 1
@@ -309,7 +614,7 @@ if res.returncode != 0:
     print("PowerShell Error:", res.stderr)
     sys.exit(1)
 
-# Clean Ribbon XML: 2 groups (Font Chu + Tinh Khoi Luong DValue)
+# Clean Ribbon XML: 4 groups (Doi Font, Du Toan DValue, In An, He Thong)
 ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui">
   <ribbon>
     <tabs>
@@ -319,6 +624,9 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         </group>
         <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpPrint" label="In An">
+          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="PrintPreview" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="He Thong">
           <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
@@ -338,6 +646,9 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
+        <group id="grpPrint" label="In An">
+          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="PrintPreview" onAction="Ribbon_OnAction"/>
+        </group>
         <group id="grpUpdate" label="He Thong">
           <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
         </group>
@@ -346,6 +657,7 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
   </ribbon>
 </customUI>"""
 
+time.sleep(1)
 files_data = {}
 with zipfile.ZipFile(temp_xlam, 'r') as zin:
     for item in zin.infolist():
@@ -375,6 +687,6 @@ shutil.copy2(final_xlam, dest)
 print("Updated AddIns location:", dest)
 
 # Clean temp files
-for tf in [temp_xlam, os.path.join(workspace, "make_master.ps1"), os.path.join(workspace, "check_dval_icon.py"), os.path.join(workspace, "check_dval_chars.py"), os.path.join(workspace, "convert_dvalue.py"), os.path.join(workspace, "prep_core.py"), os.path.join(workspace, "build_spacious.py")]:
+for tf in [temp_xlam, os.path.join(workspace, "make_master.ps1")]:
     if os.path.exists(tf):
         os.remove(tf)
