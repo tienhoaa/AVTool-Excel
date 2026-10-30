@@ -108,7 +108,8 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Private Sub btnExecute_Click()
-    Dim convMode As Integer
+    Dim srcMode As Integer
+    Dim dstMode As Integer
     Dim caseType As Integer
     
     If optScopeSelection.Value Then
@@ -122,22 +123,31 @@ Private Sub btnExecute_Click()
     gProtectFormula = chkFormula.Value
     gSkipShapes = chkShapes.Value
     
+    ' Bảng mã nguồn: 0: Tự động, 1: Unicode, 2: TCVN3, 3: VNI
     If optSrcAuto.Value Then
-        convMode = 3
-    ElseIf optSrcAbc.Value Then
-        convMode = 1
-    ElseIf optSrcVni.Value Then
-        convMode = 2
+        srcMode = 0
     ElseIf optSrcUni.Value Then
-        If optDstAbc.Value Then
-            convMode = 4
-        ElseIf optDstVni.Value Then
-            convMode = 5
-        Else
-            convMode = 0
-        End If
+        srcMode = 1
+    ElseIf optSrcAbc.Value Then
+        srcMode = 2
+    ElseIf optSrcVni.Value Then
+        srcMode = 3
+    Else
+        srcMode = 0
     End If
     
+    ' Bảng mã đích: 1: Unicode, 2: TCVN3, 3: VNI
+    If optDstUni.Value Then
+        dstMode = 1
+    ElseIf optDstAbc.Value Then
+        dstMode = 2
+    ElseIf optDstVni.Value Then
+        dstMode = 3
+    Else
+        dstMode = 1
+    End If
+    
+    ' Kiểu chữ
     If optCaseUpper.Value Then
         caseType = 1
     ElseIf optCaseLower.Value Then
@@ -148,13 +158,13 @@ Private Sub btnExecute_Click()
         caseType = 0
     End If
     
-    If convMode = 0 And caseType = 0 Then
-        MsgBoxUni "{esc('Vui lòng chọn bảng mã cần chuyển đổi hoặc kiểu chữ!')}", vbExclamation, "AVTool"
+    If srcMode <> 0 And srcMode = dstMode And caseType = 0 Then
+        MsgBoxUni "{esc('Bảng mã nguồn và bảng mã đích đang giống nhau! Vui lòng chọn bảng mã khác hoặc kiểu chữ cần đổi.')}", vbExclamation, "AVTool"
         Exit Sub
     End If
     
     Me.Hide
-    ExecuteConversion convMode, False, caseType
+    ExecuteConversionFull srcMode, dstMode, False, caseType
     Me.Show vbModeless
 End Sub
 '''

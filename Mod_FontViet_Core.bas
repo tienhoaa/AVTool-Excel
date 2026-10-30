@@ -212,32 +212,159 @@ Public Function AutoToUnicode(ByVal sInput As String, ByVal fontName As String) 
     End If
 End Function
 
-' 6. Doi hoa, thuong, tieu de Unicode
+' 6. Doi hoa, thuong, tieu de Unicode chuan xac 100%
 Public Function ChangeTextCase(ByVal sInput As String, ByVal caseType As Integer) As String
-    If Len(sInput) = 0 Then
-        ChangeTextCase = ""
+    If Len(sInput) = 0 Or caseType = 0 Then
+        ChangeTextCase = sInput
         Exit Function
     End If
-    Select Case caseType
-        Case 1: ChangeTextCase = StrConv(sInput, vbUpperCase)
-        Case 2: ChangeTextCase = StrConv(sInput, vbLowerCase)
-        Case 3: ChangeTextCase = StrConv(sInput, vbProperCase)
-    End Select
+    InitTables
+    
+    Dim i As Long, ch As String, code As Long, res As String
+    Dim bNewWord As Boolean
+    res = ""
+    bNewWord = True
+    
+    For i = 1 To Len(sInput)
+        ch = Mid$(sInput, i, 1)
+        code = AscW(ch)
+        
+        Select Case caseType
+            Case 1 ' UPPERCASE
+                res = res & ToUniUpperChar(ch, code)
+            Case 2 ' lowercase
+                res = res & ToUniLowerChar(ch, code)
+            Case 3 ' Title Case (Viet Hoa Dau Tu)
+                If code = 32 Or code = 9 Or code = 10 Or code = 13 Or code = 44 Or code = 46 Or code = 58 Or code = 59 Or code = 40 Or code = 41 Or code = 34 Or code = 45 Or code = 47 Then
+                    res = res & ch
+                    bNewWord = True
+                Else
+                    If bNewWord Then
+                        res = res & ToUniUpperChar(ch, code)
+                        bNewWord = False
+                    Else
+                        res = res & ToUniLowerChar(ch, code)
+                    End If
+                End If
+            Case Else
+                res = res & ch
+        End Select
+    Next i
+    
+    ChangeTextCase = res
+End Function
+
+Private Function ToUniUpperChar(ByVal ch As String, ByVal code As Long) As String
+    If code >= 97 And code <= 122 Then
+        ToUniUpperChar = ChrW$(code - 32)
+        Exit Function
+    End If
+    Dim j As Long
+    For j = 0 To 66
+        If mtUni(j) = code Then
+            ToUniUpperChar = ChrW$(mtUni(j + 67))
+            Exit Function
+        End If
+    Next j
+    ToUniUpperChar = ch
+End Function
+
+Private Function ToUniLowerChar(ByVal ch As String, ByVal code As Long) As String
+    If code >= 65 And code <= 90 Then
+        ToUniLowerChar = ChrW$(code + 32)
+        Exit Function
+    End If
+    Dim j As Long
+    For j = 67 To 133
+        If mtUni(j) = code Then
+            ToUniLowerChar = ChrW$(mtUni(j - 67))
+            Exit Function
+        End If
+    Next j
+    ToUniLowerChar = ch
 End Function
 
 '========================================================================================
-' CORE ENGINE: THUC THI CHUYEN DOI AN TOAN TREN EXCEL
+' CORE ENGINE: CHUYEN DOI TOAN DIEN GIUA CAC BANG MA (UNICODE, TCVN3, VNI)
 '========================================================================================
 
-Public Sub ConvertRange(ByVal targetRange As Range, ByVal convMode As Integer, Optional ByVal caseType As Integer = 0)
+Public Function ConvertText(ByVal sInput As String, ByVal fontName As String, ByVal srcMode As Integer, ByVal dstMode As Integer, ByVal caseType As Integer, ByRef outFont As String) As String
+    If Len(sInput) = 0 Then
+        ConvertText = ""
+        outFont = fontName
+        Exit Function
+    End If
+    
+    InitTables
+    Dim uniText As String
+    
+    ' Buoc 1: Chuan hoa ve Unicode
+    Select Case srcMode
+        Case 0 ' Tu dong nhan dien
+            uniText = AutoToUnicode(sInput, fontName)
+        Case 1 ' Unicode
+            uniText = sInput
+        Case 2 ' TCVN3
+            uniText = TCVN3ToUnicode(sInput)
+        Case 3 ' VNI-Windows
+            uniText = VNIToUnicode(sInput)
+        Case Else
+            uniText = AutoToUnicode(sInput, fontName)
+    End Select
+    
+    ' Buoc 2: Chuyen doi kieu chu (neu co)
+    If caseType > 0 Then
+        uniText = ChangeTextCase(uniText, caseType)
+    End If
+    
+    ' Buoc 3: Xac dinh font chu va chuyen sang bang ma dich
+    Dim isSans As Boolean
+    Dim uFont As String
+    uFont = UCase$(fontName)
+    isSans = (InStr(1, uFont, "ARIAL") > 0 Or InStr(1, uFont, "HELVE") > 0 Or InStr(1, uFont, "CALIBRI") > 0 Or InStr(1, uFont, "APTOS") > 0 Or InStr(1, uFont, "TAHOMA") > 0 Or InStr(1, uFont, "SEGOE") > 0)
+    
+    Dim res As String
+    Select Case dstMode
+        Case 1 ' Dich: Unicode (Chuan quoc te)
+            res = uniText
+            If Left$(uFont, 3) = ".VN" Or Left$(uFont, 3) = "VNI" Then
+                If isSans Then outFont = "Arial" Else outFont = "Times New Roman"
+            Else
+                outFont = fontName ' Giu nguyen font Unicode hien tai
+            End If
+            
+        Case 2 ' Dich: TCVN3 (.VnTime, .VnArial)
+            res = UnicodeToTCVN3(uniText)
+            If isSans Then outFont = ".VnArial" Else outFont = ".VnTime"
+            
+        Case 3 ' Dich: VNI-Windows (VNI-Times, VNI-Helve)
+            res = UnicodeToVNI(uniText)
+            If isSans Then outFont = "VNI-Helve" Else outFont = "VNI-Times"
+            
+        Case Else
+            res = uniText
+            outFont = fontName
+    End Select
+    
+    ConvertText = res
+End Function
+
+Public Sub ConvertRangeFull(ByVal targetRange As Range, ByVal srcMode As Integer, ByVal dstMode As Integer, Optional ByVal caseType As Integer = 0)
     On Error Resume Next
     If targetRange Is Nothing Then Exit Sub
     
     Dim textCells As Range
-    ' DIEM COT LOI: Chi lay o la Constant Text, BO QUA HOAN TOAN CAC O CONG THUC
     If gProtectFormula Then
-        Set textCells = targetRange.SpecialCells(xlCellTypeConstants, xlTextValues)
-        If textCells Is Nothing Then Exit Sub
+        If targetRange.Cells.CountLarge > 1 Then
+            Set textCells = targetRange.SpecialCells(xlCellTypeConstants, xlTextValues)
+            If textCells Is Nothing Then Exit Sub
+        Else
+            If Not targetRange.HasFormula Then
+                Set textCells = targetRange
+            Else
+                Exit Sub
+            End If
+        End If
     Else
         Set textCells = targetRange
     End If
@@ -247,32 +374,24 @@ Public Sub ConvertRange(ByVal targetRange As Range, ByVal convMode As Integer, O
     Application.EnableEvents = False
     
     Dim area As Range, cell As Range
-    Dim val As String, newVal As String, fName As String
+    Dim val As String, newVal As String, fName As String, outFont As String
     
     For Each area In textCells.Areas
         For Each cell In area
-            ' Bao ve tuyet doi: Bo qua neu o co cong thuc
             If gProtectFormula And cell.HasFormula Then
                 ' Khong lam gi ca
             Else
                 val = cell.Value2
                 If Len(val) > 0 Then
                     fName = cell.Font.Name
-                    Select Case convMode
-                        Case 1: newVal = TCVN3ToUnicode(val): cell.Font.Name = "Times New Roman"
-                        Case 2: newVal = VNIToUnicode(val): cell.Font.Name = "Times New Roman"
-                        Case 3: newVal = AutoToUnicode(val, fName): cell.Font.Name = "Times New Roman"
-                        Case 4: newVal = UnicodeToTCVN3(val): cell.Font.Name = ".VnTime"
-                        Case 5: newVal = UnicodeToVNI(val): cell.Font.Name = "VNI-Times"
-                        Case Else: newVal = val
-                    End Select
-                    
-                    If caseType > 0 Then
-                        newVal = ChangeTextCase(newVal, caseType)
-                    End If
+                    outFont = fName
+                    newVal = ConvertText(val, fName, srcMode, dstMode, caseType, outFont)
                     
                     If newVal <> val Then
                         cell.Value = newVal
+                    End If
+                    If Len(outFont) > 0 And outFont <> fName Then
+                        cell.Font.Name = outFont
                     End If
                 End If
             End If
@@ -284,33 +403,24 @@ Public Sub ConvertRange(ByVal targetRange As Range, ByVal convMode As Integer, O
     Application.ScreenUpdating = True
 End Sub
 
-Public Sub ConvertShapes(ByVal ws As Worksheet, ByVal convMode As Integer, Optional ByVal caseType As Integer = 0)
+Public Sub ConvertShapesFull(ByVal ws As Worksheet, ByVal srcMode As Integer, ByVal dstMode As Integer, Optional ByVal caseType As Integer = 0)
     If gSkipShapes Then Exit Sub
     
     On Error Resume Next
     Dim shp As Shape
-    Dim txt As String, newTxt As String, fName As String
+    Dim txt As String, newTxt As String, fName As String, outFont As String
     
     For Each shp In ws.Shapes
-        ' BẢO VỆ HÌNH ẢNH: Bỏ qua 13=Picture, 11=LinkedPicture, 12=OLE, 3=Chart
         If shp.Type <> 13 And shp.Type <> 11 And shp.Type <> 12 And shp.Type <> 3 Then
             If shp.HasTextFrame Then
                 If shp.TextFrame2.HasText Then
                     txt = shp.TextFrame2.TextRange.Text
                     If Len(txt) > 0 Then
                         fName = shp.TextFrame2.TextRange.Font.Name
-                        Select Case convMode
-                            Case 1: newTxt = TCVN3ToUnicode(txt): shp.TextFrame2.TextRange.Font.Name = "Times New Roman"
-                            Case 2: newTxt = VNIToUnicode(txt): shp.TextFrame2.TextRange.Font.Name = "Times New Roman"
-                            Case 3: newTxt = AutoToUnicode(txt, fName): shp.TextFrame2.TextRange.Font.Name = "Times New Roman"
-                            Case 4: newTxt = UnicodeToTCVN3(txt): shp.TextFrame2.TextRange.Font.Name = ".VnTime"
-                            Case 5: newTxt = UnicodeToVNI(txt): shp.TextFrame2.TextRange.Font.Name = "VNI-Times"
-                            Case Else: newTxt = txt
-                        End Select
-                        If caseType > 0 Then
-                            newTxt = ChangeTextCase(newTxt, caseType)
-                        End If
+                        outFont = fName
+                        newTxt = ConvertText(txt, fName, srcMode, dstMode, caseType, outFont)
                         If newTxt <> txt Then shp.TextFrame2.TextRange.Text = newTxt
+                        If Len(outFont) > 0 And outFont <> fName Then shp.TextFrame2.TextRange.Font.Name = outFont
                     End If
                 End If
             End If
@@ -318,7 +428,7 @@ Public Sub ConvertShapes(ByVal ws As Worksheet, ByVal convMode As Integer, Optio
     Next shp
 End Sub
 
-Public Sub ExecuteConversion(ByVal convMode As Integer, Optional ByVal bSilent As Boolean = False, Optional ByVal caseType As Integer = 0)
+Public Sub ExecuteConversionFull(ByVal srcMode As Integer, ByVal dstMode As Integer, Optional ByVal bSilent As Boolean = False, Optional ByVal caseType As Integer = 0)
     InitSettings
     
     Dim msgScope As String
@@ -326,42 +436,86 @@ Public Sub ExecuteConversion(ByVal convMode As Integer, Optional ByVal bSilent A
     Select Case gProcessScope
         Case 1 ' Selection
             If TypeName(Selection) <> "Range" Then
-                If Not bSilent Then MsgBox "Vui long chon mot vung o tren bang tinh!", vbExclamation, "AVTool"
+                If Not bSilent Then MsgBoxUniCore "\u0056\u0075\u0069\u0020\u006C\u00F2\u006E\u0067\u0020\u0063\u0068\u1ECD\u006E\u0020\u006D\u1ED9\u0074\u0020\u0076\u00F9\u006E\u0067\u0020\u00F4\u0020\u0074\u0072\u00EA\u006E\u0020\u0062\u1EA3\u006E\u0067\u0020\u0074\u00ED\u006E\u0068\u0021", vbExclamation, "AVTool"
                 Exit Sub
             End If
-            ConvertRange Selection, convMode, caseType
-            msgScope = "vung dang chon"
+            ConvertRangeFull Selection, srcMode, dstMode, caseType
+            msgScope = UniTextCore("\u0076\u00F9\u006E\u0067\u0020\u0111\u0061\u006E\u0067\u0020\u0063\u0068\u1ECD\u006E")
             
         Case 2 ' ActiveSheet
-            ConvertRange ActiveSheet.UsedRange, convMode, caseType
-            ConvertShapes ActiveSheet, convMode, caseType
-            msgScope = "Sheet hien tai (" & ActiveSheet.Name & ")"
+            ConvertRangeFull ActiveSheet.UsedRange, srcMode, dstMode, caseType
+            ConvertShapesFull ActiveSheet, srcMode, dstMode, caseType
+            msgScope = UniTextCore("Sheet \u0068\u0069\u1EC7\u006E\u0020\u0074\u1EA1\u0069\u0020\u0028") & ActiveSheet.Name & ")"
             
         Case 3 ' All Sheets
             Dim ws As Worksheet
             For Each ws In ActiveWorkbook.Worksheets
-                ConvertRange ws.UsedRange, convMode, caseType
-                ConvertShapes ws, convMode, caseType
+                ConvertRangeFull ws.UsedRange, srcMode, dstMode, caseType
+                ConvertShapesFull ws, srcMode, dstMode, caseType
             Next ws
-            msgScope = "toan bo cac Sheet trong Workbook"
+            msgScope = UniTextCore("\u0074\u006F\u00E0\u006E\u0020\u0062\u1ED9\u0020\u0063\u00E1\u0063\u0020\u0053\u0068\u0065\u0065\u0074\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u0057\u006F\u0072\u006B\u0062\u006F\u006F\u006B")
     End Select
     
-    Dim modeDesc As String
-    Select Case convMode
-        Case 1: modeDesc = "TCVN3 (.VnTime) sang Unicode"
-        Case 2: modeDesc = "VNI-Windows sang Unicode"
-        Case 3: modeDesc = "Tu dong nhan dien sang Unicode"
-        Case 4: modeDesc = "Unicode sang TCVN3"
-        Case 5: modeDesc = "Unicode sang VNI"
-        Case Else: modeDesc = "Doi kieu chu"
+    Dim srcName As String, dstName As String
+    Select Case srcMode
+        Case 0: srcName = UniTextCore("\u0054\u1EF1\u0020\u0111\u1ED9\u006E\u0067")
+        Case 1: srcName = "Unicode"
+        Case 2: srcName = "TCVN3"
+        Case 3: srcName = "VNI-Windows"
+    End Select
+    
+    Select Case dstMode
+        Case 1: dstName = "Unicode"
+        Case 2: dstName = "TCVN3 (.VnTime)"
+        Case 3: dstName = "VNI-Windows"
     End Select
     
     If Not bSilent Then
-        MsgBox "Da hoan thanh chuyen doi " & modeDesc & " cho " & msgScope & "!" & vbCrLf & _
-               "- Cong thuc: Da bao ve an toan 100%" & vbCrLf & _
-               "- Hinh anh/Shape: " & IIf(gSkipShapes, "Da bo qua an toan", "Da xu ly Text, giu nguyen hinh anh"), _
-               vbInformation, "AVTool - Thanh Cong"
+        Dim succMsg As String
+        succMsg = UniTextCore("\u0110\u00E3\u0020\u0068\u006F\u00E0\u006E\u0020\u0074\u0068\u00E0\u006E\u0068\u0020\u0063\u0068\u0075\u0079\u1EC3\u006E\u0020\u0111\u1ED5\u0069\u0020\u0074\u1EEB\u0020") & srcName & UniTextCore("\u0020\u0073\u0061\u006E\u0067\u0020") & dstName & UniTextCore("\u0020\u0063\u0068\u006F\u0020") & msgScope & "!" & vbCrLf & _
+                  "- " & UniTextCore("\u0043\u00F4\u006E\u0067\u0020\u0074\u0068\u1EE9\u0063\u003A\u0020\u0110\u00E3\u0020\u0062\u1EA3\u006F\u0020\u0076\u1EC7\u0020\u0061\u006E\u0020\u0074\u006F\u00E0\u006E\u0020\u0031\u0030\u0030\u0025") & vbCrLf & _
+                  "- " & UniTextCore("\u0048\u00EC\u006E\u0068\u0020\u1EA3\u006E\u0068\u002F\u0053\u0068\u0061\u0070\u0065\u003A\u0020") & IIf(gSkipShapes, UniTextCore("\u0110\u00E3\u0020\u0062\u1ECF\u0020\u0071\u0075\u0061\u0020\u0061\u006E\u0020\u0074\u006F\u00E0\u006E"), UniTextCore("\u0110\u00E3\u0020\u0078\u1EE7\u0020\u006C\u00FD\u0020\u0054\u0065\u0078\u0074"))
+        MsgBoxUniCore succMsg, vbInformation, UniTextCore("\u0041\u0056\u0054\u006F\u006F\u006C\u0020\u002D\u0020\u0054\u0068\u00E0\u006E\u0068\u0020\u0043\u00F4\u006E\u0067")
     End If
+End Sub
+
+Public Sub ConvertRange(ByVal targetRange As Range, ByVal convMode As Integer, Optional ByVal caseType As Integer = 0)
+    Dim srcMode As Integer, dstMode As Integer
+    Select Case convMode
+        Case 1: srcMode = 2: dstMode = 1 ' TCVN3 -> Unicode
+        Case 2: srcMode = 3: dstMode = 1 ' VNI -> Unicode
+        Case 3: srcMode = 0: dstMode = 1 ' Auto -> Unicode
+        Case 4: srcMode = 1: dstMode = 2 ' Unicode -> TCVN3
+        Case 5: srcMode = 1: dstMode = 3 ' Unicode -> VNI
+        Case Else: srcMode = 0: dstMode = 1
+    End Select
+    ConvertRangeFull targetRange, srcMode, dstMode, caseType
+End Sub
+
+Public Sub ConvertShapes(ByVal ws As Worksheet, ByVal convMode As Integer, Optional ByVal caseType As Integer = 0)
+    Dim srcMode As Integer, dstMode As Integer
+    Select Case convMode
+        Case 1: srcMode = 2: dstMode = 1
+        Case 2: srcMode = 3: dstMode = 1
+        Case 3: srcMode = 0: dstMode = 1
+        Case 4: srcMode = 1: dstMode = 2
+        Case 5: srcMode = 1: dstMode = 3
+        Case Else: srcMode = 0: dstMode = 1
+    End Select
+    ConvertShapesFull ws, srcMode, dstMode, caseType
+End Sub
+
+Public Sub ExecuteConversion(ByVal convMode As Integer, Optional ByVal bSilent As Boolean = False, Optional ByVal caseType As Integer = 0)
+    Dim srcMode As Integer, dstMode As Integer
+    Select Case convMode
+        Case 1: srcMode = 2: dstMode = 1
+        Case 2: srcMode = 3: dstMode = 1
+        Case 3: srcMode = 0: dstMode = 1
+        Case 4: srcMode = 1: dstMode = 2
+        Case 5: srcMode = 1: dstMode = 3
+        Case Else: srcMode = 0: dstMode = 1
+    End Select
+    ExecuteConversionFull srcMode, dstMode, bSilent, caseType
 End Sub
 
 Public Sub Run_AutoToUnicode(Optional ByVal bSilent As Boolean = False)
@@ -767,7 +921,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.1.0"
+    currentVer = "2.1.1"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled
