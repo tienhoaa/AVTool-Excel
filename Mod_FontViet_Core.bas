@@ -659,15 +659,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
                      "Noi dung cap nhat:" & vbCrLf & changeLog & vbCrLf & vbCrLf & _
                      "Ban co muon tu dong cap nhat ngay bay gio khong?", vbQuestion + vbYesNo, "AVTool Update")
         If ans = vbYes Then
-            Dim batPath As String
-            batPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
-            If Dir$(batPath) <> "" Then
-                Shell Chr(34) & batPath & Chr(34), vbNormalFocus
-                ThisWorkbook.Saved = True
-                Application.Quit
-            Else
-                ThisWorkbook.FollowHyperlink downUrl
-            End If
+            ThisWorkbook.FollowHyperlink downUrl
         End If
     Else
         If Not bSilent Then
