@@ -1,34 +1,50 @@
 ========================================================================
-   AVTOOL PRO 2026 - BỘ CÔNG CỤ ĐỔI FONT & TÍNH KHỐI LƯỢNG DỰ TOÁN
+            AVTOOL PRO 2026 - BỘ CÔNG CỤ EXCEL CHUYÊN NGHIỆP
 ========================================================================
 
-I. CÁCH CÀI ĐẶT (CHỈ CẦN LÀM 1 LẦN DUY NHẤT):
+Hệ thống Add-in Excel mạnh mẽ tích hợp trực tiếp trên thanh Ribbon:
+1. CHUYỂN ĐỔI FONT TIẾNG VIỆT (TCVN3, VNI -> Unicode).
+2. TÍNH KHỐI LƯỢNG DỰ TOÁN (Hàm DValue).
+3. IN NHIỀU SHEET (Batch Print Preview).
+4. CẬP NHẬT TỰ ĐỘNG ONLINE TỪ GITHUB (tienhoaa/AVTool-Excel).
+
 ------------------------------------------------------------------------
-1. Giải nén file ZIP này ra máy tính.
-2. Tắt Excel (nếu đang mở).
-3. Nhấp đúp chuột vào file: "Cai_Dat_AVTool.bat" (Chờ 1 giây là xong).
-4. Mở Excel lên sẽ thấy ngay tab [AVTool] xuất hiện trên thanh Ribbon!
-
-(Nếu sau này không muốn dùng nữa, chỉ cần nhấp đúp vào "Go_Cai_Dat_AVTool.bat")
-
-
-II. HƯỚNG DẪN SỬ DỤNG:
+HƯỚNG DẪN CÀI ĐẶT
 ------------------------------------------------------------------------
-1. ĐỔI FONT TIẾNG VIỆT (NÚT BÊN TRÁI):
-   - Bấm vào nút "Đổi Font Tiếng Việt" trên thanh Ribbon AVTool để mở Form.
-   - Chọn bảng mã nguồn (Mặc định: Tự động nhận diện TCVN3 .VnTime, VNI-Windows).
-   - Chọn bảng mã đích: Unicode chuẩn quốc tế.
-   - Chọn phạm vi: Vùng đang chọn (Selection) / Toàn bộ Sheet / Toàn bộ File.
-   - Bấm "THỰC HIỆN CHUYỂN ĐỔI".
-   => CAM KẾT: 100% không làm mất công thức tính toán và giữ nguyên toàn bộ hình ảnh, biểu đồ!
+1. Giải nén toàn bộ file ZIP ra một thư mục.
+2. Nhấp đúp vào file "Cai_Dat_AVTool.bat".
+3. Mở Excel lên, trên thanh Menu sẽ xuất hiện ngay Tab [AVTool].
 
-2. CHÈN DVALUE VÀO FILE (NÚT BÊN PHẢI):
-   - Khi mở file dự toán/tính khối lượng (các ô tính từ chuỗi chữ bị lỗi #NAME?):
-   - Bấm nút "Chèn DValue Vào File".
-   - Tool sẽ tự động quét, chèn hàm DValue mới nhất vào file và tính toán lại bảng tính.
-   - Ngay sau đó, cửa sổ "Save As" sẽ tự động hiện lên để bạn lưu file dưới dạng
-     Excel 97-2003 (*.xls) hoặc Excel Macro-Enabled (*.xlsm).
-   - Sau khi lưu, bạn có thể gửi file cho bất kỳ ai, máy đối tác không cần cài Tool
-     vẫn tự động tính toán bình thường.
+------------------------------------------------------------------------
+CÁC TÍNH NĂNG CHÍNH
+------------------------------------------------------------------------
 
+1. Nút "Đổi Font Tiếng Việt":
+   - Mở Form giao diện tiếng Việt chuẩn đẹp, font Segoe UI.
+   - Tự động nhận diện bảng mã nguồn TCVN3 (.VnTime), VNI sang Unicode.
+   - An toàn 100%: Bảo vệ nguyên vẹn toàn bộ các ô công thức.
+   - Bỏ qua hình ảnh, chữ ký scan, shapes.
+
+2. Nút "Chèn DValue Vào File":
+   - Tự động chèn hàm DValue tính khối lượng từ chuỗi diễn giải.
+   - Hỗ trợ các biểu thức phức tạp, lồng nhiều ngoặc (), [], {}.
+   - Tự động lọc bỏ các đơn vị đo: m, m2, m3, kg, bên, cánh, mặt...
+   - Tự động hiện hộp thoại Save As gợi ý lưu file .xls / .xlsm.
+
+3. Nút "In Nhiều Sheet":
+   - Form 2 cột trực quan:
+     + Cột trái: Danh sách toàn bộ các sheet trong file.
+     + Cột phải: Danh sách các sheet bạn chọn để in.
+     + Nút >, >>, <, <<: Chuyển sheet qua lại nhanh chóng (hoặc nhấp đúp vào tên sheet).
+     + Nút Lên / Xuống: Đổi thứ tự in ấn của các sheet theo ý muốn.
+   - Nút "Xem trước (Print Preview)": Mở cửa sổ Print Preview chuẩn của Excel để xem tuần tự các sheet đã chọn.
+   - Nút "In trực tiếp": In trực tiếp toàn bộ sheet đã chọn ra máy in.
+
+4. Nút "Cập Nhật Bản Mới":
+   - Kết nối trực tiếp máy chủ GitHub (tienhoaa/AVTool-Excel).
+   - Kiểm tra phiên bản mới, hiển thị chi tiết các tính năng mới được cập nhật.
+   - Tự động thay thế file cập nhật chỉ với 1 cú click chuột (hoặc chạy file Cap_Nhat_Online.bat).
+
+========================================================================
+Tác giả / Repository: https://github.com/tienhoaa/AVTool-Excel
 ========================================================================
