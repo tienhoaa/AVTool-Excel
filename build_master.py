@@ -151,6 +151,10 @@ End Sub
 '''
 
 # Form 2: Clean frmBatchPrint Captions & Code
+cbo_item0 = esc("1. Theo từng Sheet (Mặc định)")
+cbo_item1 = esc("2. Đồng loạt khổ A4")
+cbo_item2 = esc("3. Đồng loạt khổ A3")
+
 elements_batchprint = [
     ("Me.Caption", "AVTool - In Nhieu Sheet (Fit All Columns & Paper Size)"),
     ("lblHeader.Caption", "AVTOOL - IN NHIỀU SHEET (BATCH PRINT)"),
@@ -160,7 +164,7 @@ elements_batchprint = [
     ("chkAllVisible.Caption", "Chỉ hiển thị các Sheet không bị ẩn"),
     ("fraOptions.Caption", " Tùy chọn in ấn & Máy in "),
     ("lblPaper.Caption", "Khổ giấy:"),
-    ("chkFitAllColumns.Caption", "Co tất cả các cột vào 1 trang (Fit All Columns on One Page)"),
+    ("chkFitAllColumns.Caption", "Co vừa chiều ngang 1 trang (Fit All Columns on One Page)"),
     ("lblPrinterTitle.Caption", "Máy in:"),
     ("btnChangePrinter.Caption", "Đổi máy in..."),
     ("btnPreview.Caption", "Xem trước (Print Preview)"),
@@ -235,11 +239,11 @@ Private Sub UserForm_Initialize()
     chkAllVisible.Value = True
 {captions_batchprint}
 
-    ' Setup ComboBox Khổ giấy
+    ' Setup ComboBox Kho giay voi chuoi UniText chuan 100%
     cboPaperSize.Clear
-    cboPaperSize.AddItem UniText("Gi\u1EEF nguy\u00EAn t\u1EEBng Sheet (Khuy\u00EAn d\u00F9ng)")
-    cboPaperSize.AddItem UniText("\u0110\u1ED3ng lo\u1EA1t kh\u1ED5 A4")
-    cboPaperSize.AddItem UniText("\u0110\u1ED3ng lo\u1EA1t kh\u1ED5 A3")
+    cboPaperSize.AddItem UniText("{cbo_item0}")
+    cboPaperSize.AddItem UniText("{cbo_item1}")
+    cboPaperSize.AddItem UniText("{cbo_item2}")
     cboPaperSize.ListIndex = 0
 
     UpdatePrinterName
@@ -348,14 +352,14 @@ End Sub
 
 Private Sub ApplySettingsToSheet(ws As Object)
     On Error Resume Next
-    ' 1. Khổ giấy (nếu người dùng chọn đồng loạt)
+    ' 1. Kho giay (neu chon dong loat)
     If cboPaperSize.ListIndex = 1 Then
         ws.PageSetup.PaperSize = xlPaperA4
     ElseIf cboPaperSize.ListIndex = 2 Then
         ws.PageSetup.PaperSize = xlPaperA3
     End If
 
-    ' 2. Fit All Columns on One Page (Co vừa chiều ngang trang)
+    ' 2. Fit All Columns on One Page (Co vua chieu ngang trang)
     If chkFitAllColumns.Value Then
         ws.PageSetup.Zoom = False
         ws.PageSetup.FitToPagesWide = 1
@@ -408,7 +412,7 @@ Private Sub btnPrint_Click()
     Set actSheet = ActiveSheet
     Me.Hide
 
-    ' In từng sheet tuần tự: Giữ trọn vẹn 100% hướng in ngang/dọc và tiêu đề lặp lại riêng của từng sheet
+    ' In tung sheet tuan tu: Giu tron ven 100% huong in ngang/doc va tieu de lap lai rieng cua tung sheet
     Dim i As Long, sName As String
     For i = 0 To lstTarget.ListCount - 1
         sName = lstTarget.List(i)
@@ -577,61 +581,61 @@ try {{
     $form2 = $wb.VBProject.VBComponents.Add(3)
     $form2.Name = "frmBatchPrint"
     $form2.Properties.Item("Caption").Value = "AVTool - In Nhieu Sheet (Fit All Columns & Paper Size)"
-    $form2.Properties.Item("Width").Value = 505
-    $form2.Properties.Item("Height").Value = 475
+    $form2.Properties.Item("Width").Value = 515
+    $form2.Properties.Item("Height").Value = 485
 
     # Header Title
     $lblH2 = $form2.Designer.Controls.Add("Forms.Label.1", "lblHeader")
     $lblH2.Caption = "AVTOOL - IN NHIEU SHEET (BATCH PRINT)"
-    $lblH2.Left = 16; $lblH2.Top = 8; $lblH2.Width = 470; $lblH2.Height = 20
+    $lblH2.Left = 16; $lblH2.Top = 8; $lblH2.Width = 475; $lblH2.Height = 20
 
     $lblS2 = $form2.Designer.Controls.Add("Forms.Label.1", "lblSub")
     $lblS2.Caption = "Chon sheet in, co vua chieu ngang trang (Fit All Columns) & chon may in"
-    $lblS2.Left = 16; $lblS2.Top = 26; $lblS2.Width = 470; $lblS2.Height = 18
+    $lblS2.Left = 16; $lblS2.Top = 26; $lblS2.Width = 475; $lblS2.Height = 18
 
     # Frame Col 1: Source
     $frS1 = $form2.Designer.Controls.Add("Forms.Frame.1", "fraSource")
     $frS1.Caption = " Sheet trong Workbook "
-    $frS1.Left = 14; $frS1.Top = 46; $frS1.Width = 182; $frS1.Height = 200
+    $frS1.Left = 14; $frS1.Top = 46; $frS1.Width = 185; $frS1.Height = 200
 
     $lstS = $frS1.Controls.Add("Forms.ListBox.1", "lstSource")
-    $lstS.Left = 6; $lstS.Top = 16; $lstS.Width = 168; $lstS.Height = 176
+    $lstS.Left = 6; $lstS.Top = 16; $lstS.Width = 171; $lstS.Height = 176
     $lstS.MultiSelect = 1
 
     # Buttons Transfer (Middle)
     $bA1 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnAddOne")
     $bA1.Caption = ">"
-    $bA1.Left = 204; $bA1.Top = 75; $bA1.Width = 34; $bA1.Height = 26
+    $bA1.Left = 207; $bA1.Top = 75; $bA1.Width = 34; $bA1.Height = 26
 
     $bAA = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnAddAll")
     $bAA.Caption = ">>"
-    $bAA.Left = 204; $bAA.Top = 107; $bAA.Width = 34; $bAA.Height = 26
+    $bAA.Left = 207; $bAA.Top = 107; $bAA.Width = 34; $bAA.Height = 26
 
     $bR1 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnRemoveOne")
     $bR1.Caption = "<"
-    $bR1.Left = 204; $bR1.Top = 145; $bR1.Width = 34; $bR1.Height = 26
+    $bR1.Left = 207; $bR1.Top = 145; $bR1.Width = 34; $bR1.Height = 26
 
     $bRA = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnRemoveAll")
     $bRA.Caption = "<<"
-    $bRA.Left = 204; $bRA.Top = 177; $bRA.Width = 34; $bRA.Height = 26
+    $bRA.Left = 207; $bRA.Top = 177; $bRA.Width = 34; $bRA.Height = 26
 
     # Frame Col 2: Target
     $frT1 = $form2.Designer.Controls.Add("Forms.Frame.1", "fraTarget")
     $frT1.Caption = " Danh sach Sheet can in "
-    $frT1.Left = 246; $frT1.Top = 46; $frT1.Width = 182; $frT1.Height = 200
+    $frT1.Left = 249; $frT1.Top = 46; $frT1.Width = 185; $frT1.Height = 200
 
     $lstT = $frT1.Controls.Add("Forms.ListBox.1", "lstTarget")
-    $lstT.Left = 6; $lstT.Top = 16; $lstT.Width = 168; $lstT.Height = 176
+    $lstT.Left = 6; $lstT.Top = 16; $lstT.Width = 171; $lstT.Height = 176
     $lstT.MultiSelect = 1
 
     # Buttons Order (Right)
     $bUp = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnMoveUp")
     $bUp.Caption = "Len"
-    $bUp.Left = 436; $bUp.Top = 105; $bUp.Width = 48; $bUp.Height = 28
+    $bUp.Left = 442; $bUp.Top = 105; $bUp.Width = 48; $bUp.Height = 28
 
     $bDown = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnMoveDown")
     $bDown.Caption = "Xuong"
-    $bDown.Left = 436; $bDown.Top = 145; $bDown.Width = 48; $bDown.Height = 28
+    $bDown.Left = 442; $bDown.Top = 145; $bDown.Width = 48; $bDown.Height = 28
 
     # Options CheckBox All Visible
     $chkVis = $form2.Designer.Controls.Add("Forms.CheckBox.1", "chkAllVisible")
@@ -642,47 +646,47 @@ try {{
     # Frame Options: Kho giay, Fit & May in
     $frOpt = $form2.Designer.Controls.Add("Forms.Frame.1", "fraOptions")
     $frOpt.Caption = " Tuy chon in an & May in "
-    $frOpt.Left = 14; $frOpt.Top = 270; $frOpt.Width = 470; $frOpt.Height = 108
+    $frOpt.Left = 14; $frOpt.Top = 270; $frOpt.Width = 478; $frOpt.Height = 112
 
     # Kho giay
     $lbPa = $frOpt.Controls.Add("Forms.Label.1", "lblPaper")
     $lbPa.Caption = "Kho giay:"
-    $lbPa.Left = 14; $lbPa.Top = 19; $lbPa.Width = 70; $lbPa.Height = 18
+    $lbPa.Left = 14; $lbPa.Top = 20; $lbPa.Width = 70; $lbPa.Height = 18
 
     $cbPa = $frOpt.Controls.Add("Forms.ComboBox.1", "cboPaperSize")
-    $cbPa.Left = 88; $cbPa.Top = 16; $cbPa.Width = 205; $cbPa.Height = 22
+    $cbPa.Left = 88; $cbPa.Top = 17; $cbPa.Width = 220; $cbPa.Height = 22
 
-    # Fit all columns to 1 page
+    # Fit all columns to 1 page (Dat Width rong 450, Height 22, Left 14 khong bi cat chu)
     $ckFt = $frOpt.Controls.Add("Forms.CheckBox.1", "chkFitAllColumns")
-    $ckFt.Caption = "Co tat ca cac cot vao 1 trang (Fit All Columns on One Page)"
-    $ckFt.Left = 14; $ckFt.Top = 46; $ckFt.Width = 440; $ckFt.Height = 20
+    $ckFt.Caption = "Co vua chieu ngang 1 trang (Fit All Columns on One Page)"
+    $ckFt.Left = 14; $ckFt.Top = 48; $ckFt.Width = 450; $ckFt.Height = 22
 
     # May in
     $lbPrT = $frOpt.Controls.Add("Forms.Label.1", "lblPrinterTitle")
     $lbPrT.Caption = "May in:"
-    $lbPrT.Left = 14; $lbPrT.Top = 75; $lbPrT.Width = 55; $lbPrT.Height = 18
+    $lbPrT.Left = 14; $lbPrT.Top = 78; $lbPrT.Width = 55; $lbPrT.Height = 18
 
     $lbPrN = $frOpt.Controls.Add("Forms.Label.1", "lblPrinterName")
     $lbPrN.Caption = "Dang lay ten may in mac dinh..."
-    $lbPrN.Left = 70; $lbPrN.Top = 75; $lbPrN.Width = 285; $lbPrN.Height = 18
+    $lbPrN.Left = 70; $lbPrN.Top = 78; $lbPrN.Width = 290; $lbPrN.Height = 18
 
     $btPrC = $frOpt.Controls.Add("Forms.CommandButton.1", "btnChangePrinter")
     $btPrC.Caption = "Doi may in..."
-    $btPrC.Left = 362; $btPrC.Top = 71; $btPrC.Width = 98; $btPrC.Height = 25
+    $btPrC.Left = 368; $btPrC.Top = 73; $btPrC.Width = 98; $btPrC.Height = 26
 
     # Bottom Actions Buttons
     $bPrev = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnPreview")
     $bPrev.Caption = "Xem truoc (Print Preview)"
-    $bPrev.Left = 95; $bPrev.Top = 390; $bPrev.Width = 185; $bPrev.Height = 34
+    $bPrev.Left = 100; $bPrev.Top = 395; $bPrev.Width = 185; $bPrev.Height = 34
     $bPrev.Default = $true
 
     $bPrn = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnPrint")
     $bPrn.Caption = "In ngay (Print Out)"
-    $bPrn.Left = 290; $bPrn.Top = 390; $bPrn.Width = 110; $bPrn.Height = 34
+    $bPrn.Left = 295; $bPrn.Top = 395; $bPrn.Width = 110; $bPrn.Height = 34
 
     $bCl2 = $form2.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
     $bCl2.Caption = "Dong"
-    $bCl2.Left = 410; $bCl2.Top = 390; $bCl2.Width = 74; $bCl2.Height = 34
+    $bCl2.Left = 415; $bCl2.Top = 395; $bCl2.Width = 74; $bCl2.Height = 34
     $bCl2.Cancel = $true
 
     $fcode2 = @'
@@ -703,7 +707,7 @@ try {{
 }}
 """
 
-with open(os.path.join(workspace, "make_master.ps1"), "w", encoding="utf-8") as f:
+with open(os.path.join(workspace, "make_master.ps1"), "w", encoding="utf-8-sig") as f:
     f.write(ps_script)
 
 res = subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", os.path.join(workspace, "make_master.ps1")], capture_output=True, text=True)
@@ -712,7 +716,7 @@ if res.returncode != 0:
     print("PowerShell Error:", res.stderr)
     sys.exit(1)
 
-# Clean Ribbon XML
+# Clean Ribbon XML: Dùng imageMso="FilePrintQuick" chuẩn chiếc máy in trong Excel Ribbon
 ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui">
   <ribbon>
     <tabs>
@@ -724,7 +728,7 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In An">
-          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="PrintPreview" onAction="Ribbon_OnAction"/>
+          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="He Thong">
           <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
@@ -745,7 +749,7 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In An">
-          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="PrintPreview" onAction="Ribbon_OnAction"/>
+          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="He Thong">
           <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
