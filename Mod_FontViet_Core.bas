@@ -656,6 +656,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     remoteVer = ExtractJsonVal(jsonStr, "latest_version")
     If Len(remoteVer) = 0 Then remoteVer = ExtractJsonVal(jsonStr, "version")
     changeLog = ExtractJsonVal(jsonStr, "changelog")
+    changeLog = Replace(changeLog, "\n", vbCrLf)
     downUrl = ExtractJsonVal(jsonStr, "download_url")
     If Len(downUrl) = 0 Then downUrl = "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
     
@@ -673,6 +674,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
             updaterPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
             If Dir$(updaterPath) <> "" Then
                 Shell "explorer.exe " & Chr(34) & updaterPath & Chr(34), vbNormalFocus
+                Application.DisplayAlerts = False
                 ThisWorkbook.Saved = True
                 Application.Quit
             Else
