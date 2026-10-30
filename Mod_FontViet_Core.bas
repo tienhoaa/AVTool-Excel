@@ -431,6 +431,7 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         ' Form
         Case "btnOpenForm": ShowAVToolForm
         Case "btnInsertDValue": InsertDValueToActiveWorkbook
+        Case "btnCheckUpdate": CheckForUpdates False
         
         ' Scope
         Case "btnScopeSelection": gProcessScope = 1: MsgBox "Da dat pham vi: Vung dang chon (Selection)", vbInformation, "AVTool"
@@ -603,4 +604,128 @@ PromptSaveAs:
         MsgBox "DA CHEN HAM DVALUE VAO FILE THANH CONG!" & vbCrLf & vbCrLf & _
                "Luu y: Ban chua luu file. Hay nho luu file dang .xls hoac .xlsm de giu lai ham DValue nhe!", vbInformation, "AVTool"
     End If
+End Sub
+
+
+' =========================================================
+' AUTO-UPDATE ONLINE FROM GITHUB REPOSITORY
+' =========================================================
+Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
+    Dim http As Object
+    Dim jsonStr As String
+    Dim remoteVer As String
+    Dim changeLog As String
+    Dim downUrl As String
+    Dim currentVer As String
+    Dim ans As VbMsgBoxResult
+    
+    currentVer = "1.0.1"
+    
+    On Error Resume Next
+    Application.EnableCancelKey = xlDisabled
+    
+    Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    If http Is Nothing Then Set http = CreateObject("MSXML2.ServerXMLHTTP")
+    If http Is Nothing Then Set http = CreateObject("MSXML2.XMLHTTP")
+    
+    http.Open "GET", "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/version.json?t=" & Timer, False
+    http.setRequestHeader "User-Agent", "Mozilla/5.0"
+    http.setTimeouts 3000, 3000, 3000, 3000
+    http.Send
+    
+    If http.Status <> 200 Then
+        If Not bSilent Then
+            MsgBox "Khong the ket noi toi may chu cap nhat GitHub. Vui long kiem tra lai ket noi Internet!", vbExclamation, "AVTool Update"
+        End If
+        Exit Sub
+    End If
+    
+    jsonStr = http.responseText
+    remoteVer = ExtractJsonVal(jsonStr, "version")
+    changeLog = ExtractJsonVal(jsonStr, "changelog")
+    downUrl = ExtractJsonVal(jsonStr, "download_url")
+    
+    If Len(remoteVer) = 0 Then Exit Sub
+    
+    If CompareVersions(remoteVer, currentVer) > 0 Then
+        ans = MsgBox("DA CO PHIEN BAN MOI CHO AVTOOL PRO!" & vbCrLf & vbCrLf & _
+                     "- Phien ban ban dang dung: v" & currentVer & vbCrLf & _
+                     "- Phien ban moi nhat: v" & remoteVer & vbCrLf & vbCrLf & _
+                     "Noi dung cap nhat:" & vbCrLf & changeLog & vbCrLf & vbCrLf & _
+                     "Ban co muon tu dong cap nhat ngay bay gio khong?", vbQuestion + vbYesNo, "AVTool Auto-Update")
+        If ans = vbYes Then
+            DoUpdateOnline downUrl, remoteVer
+        End If
+    Else
+        If Not bSilent Then
+            MsgBox "Ban dang su dung phien ban moi nhat (v" & currentVer & ")!", vbInformation, "AVTool Auto-Update"
+        End If
+    End If
+End Sub
+
+Private Function ExtractJsonVal(ByVal json As String, ByVal key As String) As String
+    Dim p1 As Long, p2 As Long, searchKey As String
+    searchKey = """" & key & """"
+    p1 = InStr(1, json, searchKey, vbTextCompare)
+    If p1 = 0 Then Exit Function
+    p1 = InStr(p1 + Len(searchKey), json, ":")
+    If p1 = 0 Then Exit Function
+    p1 = InStr(p1 + 1, json, """")
+    If p1 = 0 Then Exit Function
+    p2 = InStr(p1 + 1, json, """")
+    If p2 = 0 Then Exit Function
+    ExtractJsonVal = Mid$(json, p1 + 1, p2 - p1 - 1)
+End Function
+
+Private Function CompareVersions(ByVal v1 As String, ByVal v2 As String) As Long
+    Dim p1() As String, p2() As String
+    Dim i As Long, n1 As Long, n2 As Long
+    p1 = Split(v1, ".")
+    p2 = Split(v2, ".")
+    For i = 0 To UBound(p1)
+        If i > UBound(p2) Then CompareVersions = 1: Exit Function
+        n1 = Val(p1(i)): n2 = Val(p2(i))
+        If n1 > n2 Then CompareVersions = 1: Exit Function
+        If n1 < n2 Then CompareVersions = -1: Exit Function
+    Next i
+    If UBound(p2) > UBound(p1) Then CompareVersions = -1 Else CompareVersions = 0
+End Function
+
+Private Sub DoUpdateOnline(ByVal downloadUrl As String, ByVal newVer As String)
+    Dim tempXlam As String
+    Dim batPath As String
+    Dim targetPath As String
+    Dim fNum As Integer
+    Dim psDl As String
+    Dim wsh As Object
+    
+    targetPath = ThisWorkbook.FullName
+    tempXlam = Environ$("TEMP") & "\AVTool_Update.xlam"
+    batPath = Environ$("TEMP") & "\AVTool_ApplyUpdate.bat"
+    
+    psDl = "powershell -Command ""[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('" & downloadUrl & "', '" & tempXlam & "'); Unblock-File -Path '" & tempXlam & "'"""
+    
+    Set wsh = CreateObject("WScript.Shell")
+    wsh.Run psDl, 0, True
+    
+    If Dir$(tempXlam) = "" Or FileLen(tempXlam) < 1000 Then
+        MsgBox "Khong the tai ban cap nhat moi tu GitHub. Vui long thu lai sau!", vbCritical, "AVTool Update"
+        Exit Sub
+    End If
+    
+    fNum = FreeFile
+    Open batPath For Output As #fNum
+    Print #fNum, "@echo off"
+    Print #fNum, "chcp 65001 >nul"
+    Print #fNum, "timeout /t 2 /nobreak >nul"
+    Print #fNum, "copy /y """ & tempXlam & """ """ & targetPath & """ >nul"
+    Print #fNum, "del /f /q """ & tempXlam & """ >nul"
+    Print #fNum, "start excel.exe"
+    Print #fNum, "msg * ""[AVTool Pro] Da cap nhat len phien ban v" & newVer & " thanh cong!"""
+    Print #fNum, "(goto) 2>nul & del ""%~f0"""
+    Close #fNum
+    
+    wsh.Run """" & batPath & """", 0, False
+    ThisWorkbook.Saved = True
+    Application.Quit
 End Sub
