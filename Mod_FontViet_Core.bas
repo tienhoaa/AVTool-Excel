@@ -629,7 +629,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "1.0.4"
+    currentVer = "2.0.0"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled
