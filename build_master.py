@@ -320,6 +320,9 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
+        <group id="grpUpdate" label="He Thong">
+          <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
+        </group>
       </tab>
     </tabs>
   </ribbon>
@@ -334,6 +337,9 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         </group>
         <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
           <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpUpdate" label="He Thong">
+          <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
         </group>
       </tab>
     </tabs>

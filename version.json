@@ -1,6 +1,7 @@
 {
   "version": "1.0.1",
+  "latest_version": "1.0.1",
   "release_date": "2026-10-30",
-  "changelog": "- Tự động nhận diện TCVN3 (.VnTime), VNI sang Unicode\n- Hàm DValue hỗ trợ ngoặc tròn (), ngoặc vuông [], ngoặc nhọn {}\n- Tự động hiện hộp thoại Save As khi chèn DValue vào file",
-  "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
+  "changelog": "- Giao dien Form Tieng Viet co dau chuan, khong bi cat chu\n- Ham DValue ho tro ngoac tron (), vuong [], nhon {}, bo qua don vi m, m2, kg...\n- Tu dong hien hop thoai Save As luu giu Macro\n- Cap nhat he thong on dinh va bao mat 100%",
+  "download_url": "https://github.com/tienhoaa/AVTool-Excel/raw/main/TN_FontViet_Pro_2026.xlam"
 }
