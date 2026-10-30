@@ -643,10 +643,10 @@ Private Sub RefreshStatus()
     Else
         If Application.DecimalSeparator = "," And Application.ThousandsSeparator = "." Then
             optVN.Value = True
-            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Việt Nam (Thập phân: phẩy ",", Hàng nghìn: chấm ".")')}")
+            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Việt Nam (Thập phân: phẩy \',\', Hàng nghìn: chấm \'.\')')}")
         ElseIf Application.DecimalSeparator = "." And Application.ThousandsSeparator = "," Then
             optUS.Value = True
-            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Quốc tế / US (Thập phân: chấm ".", Hàng nghìn: phẩy ",")')}")
+            lblCurrent.Caption = UniText("{esc('Hiện tại: Chuẩn Quốc tế / US (Thập phân: chấm \'.\', Hàng nghìn: phẩy \',\')')}")
         Else
             lblCurrent.Caption = UniText("{esc('Hiện tại: Tùy chỉnh (Thập phân: ')}") & Application.DecimalSeparator & UniText("{esc(', Hàng nghìn: ')}") & Application.ThousandsSeparator & ")"
         End If
@@ -659,12 +659,12 @@ Private Sub btnApply_Click()
         Application.UseSystemSeparators = False
         Application.DecimalSeparator = ","
         Application.ThousandsSeparator = "."
-        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Việt Nam thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu phẩy "," | Hàng nghìn: dấu chấm ".")')}", vbInformation
+        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Việt Nam thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu phẩy \',\' | Hàng nghìn: dấu chấm \'.\')')}", vbInformation
     ElseIf optUS.Value Then
         Application.UseSystemSeparators = False
         Application.DecimalSeparator = "."
         Application.ThousandsSeparator = ","
-        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Quốc tế / US thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu chấm "." | Hàng nghìn: dấu phẩy ",")')}", vbInformation
+        MsgBoxUni "{esc('Đã chuyển sang Chuẩn Quốc tế / US thành công!')}" & vbCrLf & "{esc('(Thập phân: dấu chấm \'.\' | Hàng nghìn: dấu phẩy \',\')')}", vbInformation
     ElseIf optSystem.Value Then
         Application.UseSystemSeparators = True
         MsgBoxUni "{esc('Đã chuyển về Sử dụng dấu theo Hệ điều hành Windows (Use system separators)!')}", vbInformation
