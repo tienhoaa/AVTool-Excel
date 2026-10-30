@@ -672,7 +672,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
         If ans = vbYes Then
             updaterPath = Environ$("APPDATA") & "\Microsoft\AddIns\Cap_Nhat_Online.bat"
             If Dir$(updaterPath) <> "" Then
-                Shell Chr(34) & updaterPath & Chr(34), vbNormalFocus
+                Shell "explorer.exe " & Chr(34) & updaterPath & Chr(34), vbNormalFocus
                 ThisWorkbook.Saved = True
                 Application.Quit
             Else
