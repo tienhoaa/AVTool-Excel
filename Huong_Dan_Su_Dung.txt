@@ -1,0 +1,34 @@
+========================================================================
+   AVTOOL PRO 2026 - BỘ CÔNG CỤ ĐỔI FONT & TÍNH KHỐI LƯỢNG DỰ TOÁN
+========================================================================
+
+I. CÁCH CÀI ĐẶT (CHỈ CẦN LÀM 1 LẦN DUY NHẤT):
+------------------------------------------------------------------------
+1. Giải nén file ZIP này ra máy tính.
+2. Tắt Excel (nếu đang mở).
+3. Nhấp đúp chuột vào file: "Cai_Dat_AVTool.bat" (Chờ 1 giây là xong).
+4. Mở Excel lên sẽ thấy ngay tab [AVTool] xuất hiện trên thanh Ribbon!
+
+(Nếu sau này không muốn dùng nữa, chỉ cần nhấp đúp vào "Go_Cai_Dat_AVTool.bat")
+
+
+II. HƯỚNG DẪN SỬ DỤNG:
+------------------------------------------------------------------------
+1. ĐỔI FONT TIẾNG VIỆT (NÚT BÊN TRÁI):
+   - Bấm vào nút "Đổi Font Tiếng Việt" trên thanh Ribbon AVTool để mở Form.
+   - Chọn bảng mã nguồn (Mặc định: Tự động nhận diện TCVN3 .VnTime, VNI-Windows).
+   - Chọn bảng mã đích: Unicode chuẩn quốc tế.
+   - Chọn phạm vi: Vùng đang chọn (Selection) / Toàn bộ Sheet / Toàn bộ File.
+   - Bấm "THỰC HIỆN CHUYỂN ĐỔI".
+   => CAM KẾT: 100% không làm mất công thức tính toán và giữ nguyên toàn bộ hình ảnh, biểu đồ!
+
+2. CHÈN DVALUE VÀO FILE (NÚT BÊN PHẢI):
+   - Khi mở file dự toán/tính khối lượng (các ô tính từ chuỗi chữ bị lỗi #NAME?):
+   - Bấm nút "Chèn DValue Vào File".
+   - Tool sẽ tự động quét, chèn hàm DValue mới nhất vào file và tính toán lại bảng tính.
+   - Ngay sau đó, cửa sổ "Save As" sẽ tự động hiện lên để bạn lưu file dưới dạng
+     Excel 97-2003 (*.xls) hoặc Excel Macro-Enabled (*.xlsm).
+   - Sau khi lưu, bạn có thể gửi file cho bất kỳ ai, máy đối tác không cần cài Tool
+     vẫn tự động tính toán bình thường.
+
+========================================================================
