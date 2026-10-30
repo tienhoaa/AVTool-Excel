@@ -759,7 +759,15 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
   </ribbon>
 </customUI>"""
 
-time.sleep(1)
+for attempt in range(15):
+    subprocess.run(["powershell", "-Command", "Stop-Process -Name 'EXCEL' -Force -ErrorAction SilentlyContinue"])
+    time.sleep(1)
+    try:
+        with open(temp_xlam, 'r+b') as check_f:
+            break
+    except IOError:
+        pass
+
 files_data = {}
 with zipfile.ZipFile(temp_xlam, 'r') as zin:
     for item in zin.infolist():
