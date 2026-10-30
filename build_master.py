@@ -721,17 +721,17 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
   <ribbon>
     <tabs>
       <tab id="tabAVTool" label="AVTool">
-        <group id="grpAVTool" label="Doi Font Tieng Viet">
-          <button id="btnOpenForm" label="Doi Font Tieng Viet" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
+        <group id="grpAVTool" label="Đổi Font Tiếng Việt">
+          <button id="btnOpenForm" label="Đổi Font Tiếng Việt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
-          <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+        <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
+          <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpPrint" label="In An">
-          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
+        <group id="grpPrint" label="In Ấn">
+          <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpUpdate" label="He Thong">
-          <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
+        <group id="grpUpdate" label="Hệ Thống">
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
         </group>
       </tab>
     </tabs>
@@ -742,17 +742,17 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
   <ribbon>
     <tabs>
       <tab id="tabAVTool" label="AVTool">
-        <group id="grpAVTool" label="Doi Font Tieng Viet">
-          <button id="btnOpenForm" label="Doi Font Tieng Viet" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
+        <group id="grpAVTool" label="Đổi Font Tiếng Việt">
+          <button id="btnOpenForm" label="Đổi Font Tiếng Việt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpDValue" label="Du Toan &amp; Khoi Luong">
-          <button id="btnInsertDValue" label="Chen DValue Vao File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+        <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
+          <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpPrint" label="In An">
-          <button id="btnBatchPrint" label="In Nhieu Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
+        <group id="grpPrint" label="In Ấn">
+          <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpUpdate" label="He Thong">
-          <button id="btnCheckUpdate" label="Cap Nhat Ban Moi" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
+        <group id="grpUpdate" label="Hệ Thống">
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
         </group>
       </tab>
     </tabs>
