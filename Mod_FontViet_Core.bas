@@ -1,7 +1,7 @@
-'========================================================================================
-' MODULE: Mod_FontViet_Core
-' AVTool - He Thong Chuyen Doi Font Tieng Viet Cho Excel
-'========================================================================================
+'''========================================================================================
+''' MODULE: Mod_FontViet_Core
+''' AVTool - He Thong Chuyen Doi Font Tieng Viet Cho Excel
+'''========================================================================================
 
 Option Explicit
 
@@ -10,25 +10,6 @@ Option Explicit
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
 #End If
-
-Private Function UniTextCore(ByVal s As String) As String
-    Dim pos As Long, hexStr As String, res As String
-    res = s
-    pos = InStr(res, "\u")
-    Do While pos > 0
-        hexStr = Mid(res, pos + 2, 4)
-        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
-        pos = InStr(res, "\u")
-    Loop
-    UniTextCore = res
-End Function
-
-Private Function MsgBoxUniCore(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "") As Long
-    If Len(title) = 0 Then title = UniTextCore("AVTool")
-    MsgBoxUniCore = MessageBoxW(0, StrPtr(UniTextCore(prompt)), StrPtr(UniTextCore(title)), buttons)
-End Function
-
-
 
 Public gProtectFormula As Boolean
 Public gSkipShapes As Boolean
@@ -450,6 +431,23 @@ Public Sub ShowHelpDialog()
            vbInformation, "AVTool - Tro Giup"
 End Sub
 
+
+Private Function UniTextCore(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\u")
+    Loop
+    UniTextCore = res
+End Function
+
+Private Function MsgBoxUniCore(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "") As Long
+    If Len(title) = 0 Then title = UniTextCore("AVTool")
+    MsgBoxUniCore = MessageBoxW(0, StrPtr(UniTextCore(prompt)), StrPtr(UniTextCore(title)), buttons)
+End Function
 
 Public Sub UnhideAndHighlightRows()
     On Error GoTo ErrHandle
