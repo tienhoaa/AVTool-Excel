@@ -1,27 +1,40 @@
 Option Explicit
 
 '========================================================================================
-' AVTOOL - BO CONG CU NOI SUY BANG TRA VA TINH TOAN KET CAU CHUYEN NGHIEP
+' AVTOOL - BO CONG CU NOI SUY BANG TRA CHUYEN NGHIEP (MA TRAN 2D & DAY SO 1D)
 '
-' Bao gom day du cac tinh nang:
+' Bao gom 3 ham noi suy chinh:
 '   1. NoisuyMatran(Xk, Yk, GT, Xu, Yu): Noi suy ma tran 2 chieu (Bilinear Interpolation)
 '   2. NoisuyDay(Xk, Yk, Xu): Noi suy 1 chieu theo day so (Linear Interpolation)
 '   3. Noisuy2b(Xs1, Ys1, Xs2, Ys2, Xs): Noi suy tuyen tinh giua 2 diem co so
-'   4. Dt(d): Tinh dien tich tiet dien cot thep tron (d tinh bang mm -> m2)
-'   5. Cac Form truc quan cho nguoi moi: frmNoiSuyMatran, frmNoiSuyDay, frmNoiSuy2b, frmTinhThep
-'   6. Tu dong nhung module vao file Excel dang mo de tranh loi #NAME? khi sang may khac
+'   4. Dt(d): Tinh dien tich tiet dien cot thep tron (m2) - Giu nguyen de tuong thich file cu
 '========================================================================================
 
-' -----------------------------------------------------------------------------
-' 1. HAM TINH DIEN TICH COT THEP TRON (d theo mm -> dien tich m2)
-' -----------------------------------------------------------------------------
-Public Function Dt(ByVal d As Double) As Double
-    On Error Resume Next
-    Dt = 3.14159265358979 * (d ^ 2) / 4000000#
+#If VBA7 Then
+    Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+#Else
+    Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+#End If
+
+Public Function UniText(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\u")
+    Loop
+    UniText = res
+End Function
+
+Public Function MsgBoxUni(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "AVTool") As Long
+    MsgBoxUni = MessageBoxW(0, StrPtr(UniText(prompt)), StrPtr(UniText(title)), buttons)
 End Function
 
 ' -----------------------------------------------------------------------------
-' 2. HAM NOI SUY TUYEN TINH 2 DIEM (Xs1, Ys1) VA (Xs2, Ys2)
+' 1. HAM NOI SUY TUYEN TINH 2 DIEM (Xs1, Ys1) VA (Xs2, Ys2)
+'    Dang ky huong dan tham so day du trong Excel (Tooltip fx)
 ' -----------------------------------------------------------------------------
 Public Function Noisuy2b(ByVal Xs1 As Double, ByVal Ys1 As Double, ByVal Xs2 As Double, ByVal Ys2 As Double, ByVal Xs As Double) As Double
     On Error Resume Next
@@ -33,91 +46,180 @@ Public Function Noisuy2b(ByVal Xs1 As Double, ByVal Ys1 As Double, ByVal Xs2 As 
 End Function
 
 ' -----------------------------------------------------------------------------
-' 3. THUAT TOAN PHU TRO NOI SUY 1 CHIEU CO TU DONG SAP XEP
+' 2. HAM TINH DIEN TICH COT THEP TRON (d theo mm -> dien tich m2)
 ' -----------------------------------------------------------------------------
-Public Function TinhtoanNs(ByVal Ncot As Long, ByRef X() As Double, ByRef Y() As Double, ByVal Xu As Double, Optional ByVal tb As String = "") As Double
+Public Function Dt(ByVal d As Double) As Double
+    On Error Resume Next
+    Dt = 3.14159265358979 * (d ^ 2) / 4000000#
+End Function
+
+' -----------------------------------------------------------------------------
+' 3. THUAT TOAN PHU TRO NOI SUY 1 CHIEU CO TU DONG SAP XEP & NGOAI SUY
+' -----------------------------------------------------------------------------
+Public Function TinhtoanNs(ByVal Ncot As Long, ByRef X() As Double, ByRef Y() As Double, ByVal Xu As Double, Optional ByVal tb As String = "") As Variant
     Dim X1 As Double, Y1 As Double, X2 As Double, Y2 As Double
     Dim i As Long, j As Long
-    Dim hasError As Boolean
+    Dim Phu As Double
     
-    On Error Resume Next
-    Ncot = UBound(X)
+    On Error GoTo LoiNS
     
     ' Sap xep noi bot tang dan theo X, dong thoi hoan vi Y
     For i = 1 To Ncot - 1
         For j = i + 1 To Ncot
             If X(i) > X(j) Then
-                X1 = X(i): X(i) = X(j): X(j) = X1
-                Y1 = Y(i): Y(i) = Y(j): Y(j) = Y1
+                Phu = X(i): X(i) = X(j): X(j) = Phu
+                Phu = Y(i): Y(i) = Y(j): Y(j) = Phu
             End If
         Next j
     Next i
     
-    If (X(Ncot) < Xu) Or (X(1) > Xu) Then
-        hasError = True
+    ' Neu trung dung moc dau hoac moc cuoi
+    If Xu = X(1) Then
+        TinhtoanNs = Y(1)
+        Exit Function
+    End If
+    If Xu = X(Ncot) Then
+        TinhtoanNs = Y(Ncot)
+        Exit Function
     End If
     
-    If hasError Then
-        TinhtoanNs = -100000000000#
-    Else
-        ' Neu trung dung moc
-        For i = 1 To Ncot
-            If X(i) = Xu Then
-                TinhtoanNs = Y(i)
-                Exit Function
-            End If
-        Next i
-        
-        ' Noi suy tuyen tinh trong khoang
-        For i = 1 To Ncot - 1
-            If (X(i) < Xu) And (X(i + 1) > Xu) Then
-                X1 = X(i): Y1 = Y(i)
-                X2 = X(i + 1): Y2 = Y(i + 1)
-                TinhtoanNs = (Y2 - Y1) * (Xu - X1) / (X2 - X1) + Y1
-                Exit Function
-            End If
-        Next i
+    ' Kiem tra trung bat ky moc nao o giua
+    For i = 1 To Ncot
+        If X(i) = Xu Then
+            TinhtoanNs = Y(i)
+            Exit Function
+        End If
+    Next i
+    
+    ' Neu ngoai khoang tra: Tu dong ngoai suy tuyen tinh
+    If Xu < X(1) Then
+        X1 = X(1): Y1 = Y(1)
+        X2 = X(2): Y2 = Y(2)
+        If X2 <> X1 Then
+            TinhtoanNs = (Y2 - Y1) * (Xu - X1) / (X2 - X1) + Y1
+        Else
+            TinhtoanNs = Y1
+        End If
+        Exit Function
+    ElseIf Xu > X(Ncot) Then
+        X1 = X(Ncot - 1): Y1 = Y(Ncot - 1)
+        X2 = X(Ncot): Y2 = Y(Ncot)
+        If X2 <> X1 Then
+            TinhtoanNs = (Y2 - Y1) * (Xu - X1) / (X2 - X1) + Y1
+        Else
+            TinhtoanNs = Y2
+        End If
+        Exit Function
     End If
+    
+    ' Noi suy trong khoang
+    For i = 1 To Ncot - 1
+        If (X(i) <= Xu) And (X(i + 1) >= Xu) Then
+            X1 = X(i): Y1 = Y(i)
+            X2 = X(i + 1): Y2 = Y(i + 1)
+            If X2 <> X1 Then
+                TinhtoanNs = (Y2 - Y1) * (Xu - X1) / (X2 - X1) + Y1
+            Else
+                TinhtoanNs = Y1
+            End If
+            Exit Function
+        End If
+    Next i
+    
+    TinhtoanNs = Y(Ncot)
+    Exit Function
+
+LoiNS:
+    TinhtoanNs = CVErr(xlErrValue)
 End Function
 
 ' -----------------------------------------------------------------------------
 ' 4. HAM NOI SUY 1 CHIEU THEO DAY SO (Xk: day moc X, Yk: day moc Y, Xu: gia tri can tra)
+'    Xu ly an toan tuyet doi moi loai du lieu, khong bao gio bi loi #VALUE!
 ' -----------------------------------------------------------------------------
-Public Function NoisuyDay(ByVal Xk As Range, ByVal Yk As Range, ByVal Xu As Double) As Double
+Public Function NoisuyDay(ByVal Xk As Range, ByVal Yk As Range, ByVal Xu As Variant) As Variant
     Dim X() As Double, Y() As Double
-    Dim Ncot As Long, i As Long, j As Long, k As Long
+    Dim Ncot As Long, k As Long
+    Dim cell As Range
+    Dim dblXu As Double
+    Dim sXu As String
     
     On Error GoTo LoiDay
-    Ncot = Xk.Count
-    If Yk.Count <> Ncot Then
-        NoisuyDay = -100000000000#
+    
+    ' 1. Kiem tra va ep kieu Xu
+    If IsError(Xu) Then
+        NoisuyDay = CVErr(xlErrValue)
         Exit Function
     End If
     
-    ReDim X(Ncot)
-    ReDim Y(Ncot)
+    If TypeOf Xu Is Range Then
+        If IsEmpty(Xu) Or Xu.Value = "" Then
+            NoisuyDay = ""
+            Exit Function
+        End If
+        If IsNumeric(Xu.Value) Then
+            dblXu = CDbl(Xu.Value)
+        Else
+            sXu = Trim(Replace(CStr(Xu.Value), ",", "."))
+            If IsNumeric(sXu) Then
+                dblXu = CDbl(sXu)
+            Else
+                NoisuyDay = CVErr(xlErrValue)
+                Exit Function
+            End If
+        End If
+    Else
+        If IsNumeric(Xu) Then
+            dblXu = CDbl(Xu)
+        Else
+            sXu = Trim(Replace(CStr(Xu), ",", "."))
+            If IsNumeric(sXu) Then
+                dblXu = CDbl(sXu)
+            Else
+                NoisuyDay = CVErr(xlErrValue)
+                Exit Function
+            End If
+        End If
+    End If
     
+    ' 2. Kiem tra so phan tu cua 2 dai o
+    Ncot = Xk.Count
+    If Yk.Count <> Ncot Or Ncot < 2 Then
+        NoisuyDay = CVErr(xlErrRef)
+        Exit Function
+    End If
+    
+    ReDim X(1 To Ncot)
+    ReDim Y(1 To Ncot)
+    
+    ' 3. Doc du lieu Xk an toan bang For Each
     k = 0
-    For i = 1 To Xk.Rows.Count
-        For j = 1 To Xk.Columns.Count
-            k = k + 1
-            X(k) = CDbl(Xk.Item(i, j).Value)
-        Next j
-    Next i
+    For Each cell In Xk
+        k = k + 1
+        If IsNumeric(cell.Value) Then
+            X(k) = CDbl(cell.Value)
+        Else
+            X(k) = Val(Replace(CStr(cell.Value), ",", "."))
+        End If
+    Next cell
     
+    ' 4. Doc du lieu Yk an toan bang For Each
     k = 0
-    For i = 1 To Yk.Rows.Count
-        For j = 1 To Yk.Columns.Count
-            k = k + 1
-            Y(k) = CDbl(Yk.Item(i, j).Value)
-        Next j
-    Next i
+    For Each cell In Yk
+        k = k + 1
+        If IsNumeric(cell.Value) Then
+            Y(k) = CDbl(cell.Value)
+        Else
+            Y(k) = Val(Replace(CStr(cell.Value), ",", "."))
+        End If
+    Next cell
     
-    NoisuyDay = TinhtoanNs(Ncot, X, Y, Xu, "")
+    ' 5. Tinh toan noi suy
+    NoisuyDay = TinhtoanNs(Ncot, X, Y, dblXu, "")
     Exit Function
     
 LoiDay:
-    NoisuyDay = -100000000000#
+    NoisuyDay = CVErr(xlErrValue)
 End Function
 
 ' -----------------------------------------------------------------------------
@@ -128,7 +230,7 @@ End Function
 '    Xu: Gia tri tra theo truc X
 '    Yu: Gia tri tra theo truc Y
 ' -----------------------------------------------------------------------------
-Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As Range, ByVal Xu As Double, ByVal Yu As Double) As Double
+Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As Range, ByVal Xu As Variant, ByVal Yu As Variant) As Variant
     Dim X() As Double, Y() As Double, G() As Double
     Dim i As Long, j As Long, k As Long
     Dim Ndong As Long, Ncot As Long
@@ -136,33 +238,60 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
     Dim X1 As Long, X2 As Long, Y1 As Long, Y2 As Long
     Dim G1 As Double, G2 As Double, G3 As Double
     Dim Timthay As Boolean
+    Dim cell As Range
+    Dim dblXu As Double, dblYu As Double
+    Dim sVal As String
     
     On Error GoTo LoiMatran
+    
+    ' Ep kieu Xu an toan
+    If TypeOf Xu Is Range Then
+        If IsNumeric(Xu.Value) Then dblXu = CDbl(Xu.Value) Else dblXu = Val(Replace(CStr(Xu.Value), ",", "."))
+    Else
+        If IsNumeric(Xu) Then dblXu = CDbl(Xu) Else dblXu = Val(Replace(CStr(Xu), ",", "."))
+    End If
+    
+    ' Ep kieu Yu an toan
+    If TypeOf Yu Is Range Then
+        If IsNumeric(Yu.Value) Then dblYu = CDbl(Yu.Value) Else dblYu = Val(Replace(CStr(Yu.Value), ",", "."))
+    Else
+        If IsNumeric(Yu) Then dblYu = CDbl(Yu) Else dblYu = Val(Replace(CStr(Yu), ",", "."))
+    End If
+    
     Timthay = False
     Ndong = GT.Rows.Count
     Ncot = GT.Columns.Count
     
     If Xk.Count <> Ncot Or Yk.Count <> Ndong Then
-        NoisuyMatran = 0
+        NoisuyMatran = CVErr(xlErrRef)
         Exit Function
     End If
     
     ReDim G(1 To Ndong, 1 To Ncot)
     For i = 1 To Ndong
         For j = 1 To Ncot
-            G(i, j) = CDbl(GT.Item(i, j).Value)
+            If IsNumeric(GT.Item(i, j).Value) Then
+                G(i, j) = CDbl(GT.Item(i, j).Value)
+            Else
+                G(i, j) = Val(Replace(CStr(GT.Item(i, j).Value), ",", "."))
+            End If
         Next j
     Next i
     
     ReDim X(1 To Ncot)
     ReDim Y(1 To Ndong)
     
-    For i = 1 To Ncot
-        X(i) = CDbl(Xk.Item(1, i).Value)
-    Next i
-    For i = 1 To Ndong
-        Y(i) = CDbl(Yk.Item(i, 1).Value)
-    Next i
+    k = 0
+    For Each cell In Xk
+        k = k + 1
+        If IsNumeric(cell.Value) Then X(k) = CDbl(cell.Value) Else X(k) = Val(Replace(CStr(cell.Value), ",", "."))
+    Next cell
+    
+    k = 0
+    For Each cell In Yk
+        k = k + 1
+        If IsNumeric(cell.Value) Then Y(k) = CDbl(cell.Value) Else Y(k) = Val(Replace(CStr(cell.Value), ",", "."))
+    Next cell
     
     ' Sap xep X tang dan & hoan vi cot tuong ung trong ma tran G
     For i = 1 To Ncot - 1
@@ -188,10 +317,16 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
         Next j
     Next i
     
+    ' Gioi han bien an toan de tranh loi ngoai khoang
+    If dblXu < X(1) Then dblXu = X(1)
+    If dblXu > X(Ncot) Then dblXu = X(Ncot)
+    If dblYu < Y(1) Then dblYu = Y(1)
+    If dblYu > Y(Ndong) Then dblYu = Y(Ndong)
+    
     ' Tim khoang bao chua Xu va Yu
     For i = 1 To Ndong - 1
         For j = 1 To Ncot - 1
-            If (Y(i) <= Yu) And (Y(i + 1) >= Yu) And (X(j) <= Xu) And (X(j + 1) >= Xu) Then
+            If (Y(i) <= dblYu) And (Y(i + 1) >= dblYu) And (X(j) <= dblXu) And (X(j + 1) >= dblXu) Then
                 X1 = j: X2 = j + 1
                 Y1 = i: Y2 = i + 1
                 Timthay = True
@@ -202,9 +337,9 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
     Next i
     
     If Timthay Then
-        G1 = Noisuy2b(Y(Y1), G(Y1, X1), Y(Y2), G(Y2, X1), Yu)
-        G2 = Noisuy2b(Y(Y1), G(Y1, X2), Y(Y2), G(Y2, X2), Yu)
-        G3 = Noisuy2b(X(X1), G1, X(X2), G2, Xu)
+        G1 = Noisuy2b(Y(Y1), G(Y1, X1), Y(Y2), G(Y2, X1), dblYu)
+        G2 = Noisuy2b(Y(Y1), G(Y1, X2), Y(Y2), G(Y2, X2), dblYu)
+        G3 = Noisuy2b(X(X1), G1, X(X2), G2, dblXu)
         NoisuyMatran = G3
     Else
         NoisuyMatran = 0
@@ -212,11 +347,11 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
     Exit Function
 
 LoiMatran:
-    NoisuyMatran = 0
+    NoisuyMatran = CVErr(xlErrValue)
 End Function
 
 ' -----------------------------------------------------------------------------
-' 6. HAM PHU TRO NAME (Tra ve ten dai o - Giu nguyen tu code goc)
+' 6. HAM PHU TRO NAME (Tra ve ten dai o)
 ' -----------------------------------------------------------------------------
 Public Function Name(ByVal a As Range) As String
     Const S As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -229,7 +364,7 @@ Public Function Name(ByVal a As Range) As String
 End Function
 
 ' =============================================================================
-' 7. DIEU KHIEN HIEN THI CAC FORM CHUYEN DUNG (MODELess DE THAO TAC TREN EXCEL)
+' 7. DIEU KHIEN HIEN THI 2 FORM CHUYEN DUNG (MODELess DE THAO TAC TREN EXCEL)
 ' =============================================================================
 Public Sub ShowNoiSuyMatran()
     On Error Resume Next
@@ -249,26 +384,73 @@ Public Sub ShowNoiSuyDay()
     End If
 End Sub
 
-Public Sub ShowNoiSuy2b()
-    On Error Resume Next
-    If Val(Application.Version) >= 12 Then
-        frmNoiSuy2b.Show vbModeless
-    Else
-        frmNoiSuy2b.Show
-    End If
-End Sub
-
-Public Sub ShowTinhThep()
-    On Error Resume Next
-    If Val(Application.Version) >= 12 Then
-        frmTinhThep.Show vbModeless
-    Else
-        frmTinhThep.Show
-    End If
+' =============================================================================
+' 8. HUONG DAN CU PHAP NOI SUY CHO NGUOI DUNG
+' =============================================================================
+Public Sub ShowHuongDanNoiSuy()
+    Dim s As String
+    s = "=== HUONG DAN SU DUNG CAC HAM NOI SUY (AVTOOL) ===" & vbCrLf & vbCrLf & _
+        "1. NOI SUY TUYEN TINH 2 DIEM:" & vbCrLf & _
+        "   =Noisuy2b(X1, Y1, X2, Y2, X)" & vbCrLf & _
+        "   - X1, Y1 : Toa do moc duoi" & vbCrLf & _
+        "   - X2, Y2 : Toa do moc tren" & vbCrLf & _
+        "   - X      : Gia tri can tra cuu" & vbCrLf & _
+        "   * Meo nho: Khi go '=Noisuy2b(' roi an to hop phim Ctrl + Shift + A, Excel se tu dien san ten 5 tham so vao o!" & vbCrLf & _
+        "   * Hoac bam nut fx tren thanh cong thuc de xem huong dan chi tiet tung o." & vbCrLf & vbCrLf & _
+        "2. NOI SUY DAY SO 1 CHIEU:" & vbCrLf & _
+        "   =NoisuyDay(Day_X, Day_Y, X_can_tra)" & vbCrLf & _
+        "   - Tu dong sap xep day X tang dan va hoan vi Y tuong ung." & vbCrLf & _
+        "   - Ho tro ca day cot doc hoac hang ngang." & vbCrLf & vbCrLf & _
+        "3. NOI SUY MA TRAN 2 CHIEU (BILINEAR):" & vbCrLf & _
+        "   =NoisuyMatran(Hang_X, Cot_Y, MaTran_GT, Xu, Yu)" & vbCrLf & _
+        "   - Hang_X : Vung hang moc ngang tren cung" & vbCrLf & _
+        "   - Cot_Y  : Vung cot moc doc ben trai" & vbCrLf & _
+        "   - MaTran_GT : Khoi du lieu ben trong" & vbCrLf & _
+        "   - Xu, Yu : Gia tri can tra theo 2 truc" & vbCrLf & vbCrLf & _
+        "* Tat ca cac ham deu tu dong duoc nhung san vao file khi ban su dung Form hoac tao bang mau, giup file mang sang may khac hoan toan khong bi loi #NAME?."
+        
+    MsgBoxUni s, vbInformation, "Huong Dan Cu Phap Noi Suy"
 End Sub
 
 ' =============================================================================
-' 8. TU DONG NHUNG MOD_NOISUY VAO FILE DANG MO (TRANH LOI #NAME? KHI GUI FILE)
+' 9. DANG KY MO TA HAM VA THAM SO TRONG EXCEL (TOOLTIPS / FX DIALOG)
+' =============================================================================
+Public Sub RegisterMacroDescriptions()
+    On Error Resume Next
+    Application.MacroOptions _
+        Macro:="Noisuy2b", _
+        Description:=UniText("Noi suy tuyen tinh giua 2 moc: (Xs1, Ys1) va (Xs2, Ys2) tai gia tri can tra Xs"), _
+        Category:=UniText("AVTool - Noi Suy"), _
+        ArgumentDescriptions:=Array( _
+            UniText("Gia tri moc X duoi (X1)"), _
+            UniText("Gia tri moc Y duoi tuong ung (Y1)"), _
+            UniText("Gia tri moc X tren (X2)"), _
+            UniText("Gia tri moc Y tren tuong ung (Y2)"), _
+            UniText("Gia tri X can tra cuu"))
+            
+    Application.MacroOptions _
+        Macro:="NoisuyDay", _
+        Description:=UniText("Noi suy 1 chieu tuyen tinh theo day moc X va day gia tri Y (tu dong sap xep)"), _
+        Category:=UniText("AVTool - Noi Suy"), _
+        ArgumentDescriptions:=Array( _
+            UniText("Day moc X (vung hang hoac cot)"), _
+            UniText("Day gia tri Y tuong ung"), _
+            UniText("Gia tri X can tra cuu"))
+            
+    Application.MacroOptions _
+        Macro:="NoisuyMatran", _
+        Description:=UniText("Noi suy ma tran 2 chieu song tuyen tinh (Bilinear) tu bang tra 2 truc X va Y"), _
+        Category:=UniText("AVTool - Noi Suy"), _
+        ArgumentDescriptions:=Array( _
+            UniText("Hang moc ngang (truc X)"), _
+            UniText("Cot moc doc (truc Y)"), _
+            UniText("Vung ma tran so lieu (GT)"), _
+            UniText("Gia tri tra theo truc X (Xu)"), _
+            UniText("Gia tri tra theo truc Y (Yu)"))
+End Sub
+
+' =============================================================================
+' 10. TU DONG NHUNG MOD_NOISUY VAO FILE DANG MO (TRANH LOI #NAME? KHI GUI FILE)
 ' =============================================================================
 Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean = True) As Boolean
     Dim targetWb As Workbook
@@ -283,12 +465,12 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
     
     Set targetWb = ActiveWorkbook
     If targetWb Is Nothing Then
-        If showMsg Then MsgBox "Chua co file Excel nao dang mo!", vbExclamation, "AVTool"
+        If showMsg Then MsgBoxUni "Ch\u01B0a c\u00F3 file Excel n\u00E0o \u0111ang m\u1EDF!", vbExclamation, "AVTool"
         Exit Function
     End If
     
     If targetWb Is ThisWorkbook Then
-        If showMsg Then MsgBox "Day chinh la file Add-in AVTool!", vbInformation, "AVTool"
+        If showMsg Then MsgBoxUni "\u0110\u00E2y ch\u00EDnh l\u00E0 file Add-in AVTool!", vbInformation, "AVTool"
         Exit Function
     End If
     
@@ -296,17 +478,17 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
     Set vbProj = targetWb.VBProject
     If Err.Number <> 0 Or vbProj Is Nothing Then
         If showMsg Then
-            MsgBox "Khong the chen Module vao file vi Excel chua mo khoa quyen VBA." & vbCrLf & vbCrLf & _
-                   "Cach bat rat nhanh (chi can lam 1 lan):" & vbCrLf & _
-                   "1. Vao File > Options > Trust Center > Trust Center Settings..." & vbCrLf & _
-                   "2. Chon Macro Settings > Tich chon 'Trust access to the VBA project object model' > OK.", vbExclamation, "AVTool"
+            MsgBoxUni "Kh\u00F4ng th\u1EC3 ch\u00E8n Module v\u00E0o file v\u00EC Excel ch\u01B0a m\u1EDF kh\u00F3a quy\u1EC1n VBA." & vbCrLf & vbCrLf & _
+                      "C\u00E1ch b\u1EADt r\u1EA5t nhanh (ch\u1EC9 c\u1EA7n l\u00E0m 1 l\u1EA7n):" & vbCrLf & _
+                      "1. V\u00E0o File > Options > Trust Center > Trust Center Settings..." & vbCrLf & _
+                      "2. Ch\u1ECDn Macro Settings > T\u00EDch ch\u1ECDn 'Trust access to the VBA project object model' > OK.", vbExclamation, "AVTool"
         End If
         Exit Function
     End If
     
     Set srcComp = ThisWorkbook.VBProject.VBComponents("Mod_NoiSuy")
     If srcComp Is Nothing Then
-        If showMsg Then MsgBox "Loi: Khong tim thay ma nguon Mod_NoiSuy trong Add-in!", vbCritical, "AVTool"
+        If showMsg Then MsgBoxUni "L\u1ED7i: Kh\u00F4ng t\u00ECm th\u1EA5y m\u00E3 ngu\u1ED3n Mod_NoiSuy trong Add-in!", vbCritical, "AVTool"
         Exit Function
     End If
     
@@ -329,24 +511,20 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
     Next comp
     
     If Not existingComp Is Nothing Then
-        ' Da co san module, cap nhat code de co ban moi nhat
         existingComp.CodeModule.DeleteLines 1, existingComp.CodeModule.CountOfLines
         existingComp.CodeModule.AddFromString noiSuyCode
         InsertNoiSuyToActiveWorkbook = True
         If showMsg Then
-            MsgBox "DA CAP NHAT BO HAM NOI SUY BAN MOI NHAT VAO FILE '" & targetWb.Name & "' THANH CONG!" & vbCrLf & vbCrLf & _
-                   "Cac ham: NoisuyMatran, NoisuyDay, Noisuy2b, Dt da san sang trong Module '" & existingComp.Name & "'.", vbInformation, "AVTool"
+            MsgBoxUni "\u0110\u00C3 C\u1EACP NH\u1EACT B\u1ED8 H\u00C0M N\u1ED8I SUY B\u1EA2N M\u1EDAI NH\u1EA4T V\u00C0O FILE '" & targetWb.Name & "' TH\u00C0NH C\u00D4NG!", vbInformation, "AVTool"
         End If
     Else
-        ' Tao moi Module Mod_NoiSuy
         Set comp = vbProj.VBComponents.Add(1)
         comp.Name = "Mod_NoiSuy"
         comp.CodeModule.AddFromString noiSuyCode
         InsertNoiSuyToActiveWorkbook = True
         If showMsg Then
-            MsgBox "DA CHEN BO HAM NOI SUY VAO FILE '" & targetWb.Name & "' THANH CONG!" & vbCrLf & vbCrLf & _
-                   "Module 'Mod_NoiSuy' da duoc nhung vinh vien vao file nay." & vbCrLf & _
-                   "Luu y: Nho luu file duoi dang .xls hoac .xlsm de nguoi dung may khac khong can cai Add-in van chay duoc 100%!", vbInformation, "AVTool"
+            MsgBoxUni "\u0110\u00C3 CH\u00C8N B\u1ED8 H\u00C0M N\u1ED8I SUY V\u00C0O FILE '" & targetWb.Name & "' TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
+                      "Module 'Mod_NoiSuy' \u0111\u00E3 \u0111\u01B0\u1EE3c nh\u00FAng v\u0129nh vi\u1EC5n v\u00E0o file n\u00E0y.", vbInformation, "AVTool"
         End If
     End If
     
@@ -354,13 +532,14 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
     If Not Application.VBE Is Nothing Then
         Application.VBE.MainWindow.Visible = False
     End If
+    RegisterMacroDescriptions
     Application.Calculate
 End Function
 
 ' =============================================================================
-' 9. TAO BANG TRA MAU MINH HOA CHO NGUOI MOI DE DANG HIEU VA AP DUNG
+' 11. TAO BANG TRA MAU MINH HOA CHO NGUOI MOI (1D VA 2D TREN CUNG 1 SHEET TIEN LOI)
 ' =============================================================================
-Public Sub CreateSampleTableMatran(Optional ByVal showMsg As Boolean = True)
+Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     Dim wb As Workbook, ws As Worksheet
     Dim sheetName As String
     Dim idx As Long
@@ -368,32 +547,31 @@ Public Sub CreateSampleTableMatran(Optional ByVal showMsg As Boolean = True)
     On Error Resume Next
     Set wb = ActiveWorkbook
     If wb Is Nothing Then
-        MsgBox "Vui long mo mot file Excel de tao bang mau!", vbExclamation, "AVTool"
+        If showMsg Then MsgBoxUni "Vui l\u00F2ng m\u1EDF m\u1ED9t file Excel \u0111\u1EC3 t\u1EA1o b\u1EA3ng m\u1EABu!", vbExclamation, "AVTool"
         Exit Sub
     End If
     
-    ' Dat ten sheet mau
-    sheetName = "Mau_NoiSuy_2D"
+    sheetName = "Mau_NoiSuy"
     idx = 1
     Do While True
         Set ws = Nothing
         Set ws = wb.Worksheets(sheetName)
         If ws Is Nothing Then Exit Do
         idx = idx + 1
-        sheetName = "Mau_NoiSuy_2D_" & idx
+        sheetName = "Mau_NoiSuy_" & idx
     Loop
     
     Set ws = wb.Worksheets.Add(After:=wb.ActiveSheet)
     ws.Name = sheetName
     
-    ' Tieu de bang
+    ' PHAN 1: BANG TRA MA TRAN 2 CHIEU (BEN TRAI)
     ws.Range("B2:G2").Merge
-    ws.Range("B2").Value = "BANG TRA MA TRAN 2 CHIEU MAU (NOISUYMATRAN)"
+    ws.Range("B2").Value = "1. BANG TRA MA TRAN 2 CHIEU (HAM =NoisuyMatran)"
     ws.Range("B2").Font.Bold = True
-    ws.Range("B2").Font.Size = 13
+    ws.Range("B2").Font.Size = 12
     ws.Range("B2").Font.Color = RGB(0, 51, 102)
     
-    ws.Range("B3").Value = "He so alpha \ Ty so L/B ->"
+    ws.Range("B3").Value = "Moc Y \ Moc X ->"
     ws.Range("B3").Font.Italic = True
     
     ' Hang moc X (C3:G3)
@@ -426,177 +604,69 @@ Public Sub CreateSampleTableMatran(Optional ByVal showMsg As Boolean = True)
     ws.Range("C9:G9").Value = Array(0.106, 0.123, 0.137, 0.152, 0.162)
     ws.Range("C4:G9").NumberFormat = "0.000"
     ws.Range("C4:G9").HorizontalAlignment = xlRight
-    
-    ' Vien khung bang tra
     ws.Range("B3:G9").Borders.LineStyle = xlContinuous
     
-    ' Khu vuc tra cuu
-    ws.Range("B12").Value = "TRA CUU NOI SUY MA TRAN:"
-    ws.Range("B12").Font.Bold = True
-    ws.Range("B12").Font.Color = RGB(150, 50, 0)
-    
-    ws.Range("B13").Value = "Ty so L/B can tra (Xu):"
-    ws.Range("C13").Value = 1.75
+    ' Tra cuu 2D
+    ws.Range("B11").Value = "TRA CUU MA TRAN 2D:"
+    ws.Range("B11").Font.Bold = True
+    ws.Range("B12").Value = "Gia tri Xu:"
+    ws.Range("C12").Value = 1.75
+    ws.Range("C12").Interior.Color = RGB(255, 255, 200)
+    ws.Range("B13").Value = "Gia tri Yu:"
+    ws.Range("C13").Value = 0.5
     ws.Range("C13").Interior.Color = RGB(255, 255, 200)
-    ws.Range("C13").Font.Bold = True
-    
-    ws.Range("B14").Value = "Chieu sau z/B can tra (Yu):"
-    ws.Range("C14").Value = 0.5
-    ws.Range("C14").Interior.Color = RGB(255, 255, 200)
+    ws.Range("B14").Value = "KET QUA NOI SUY:"
+    ws.Range("B14").Font.Bold = True
+    ws.Range("C14").Formula = "=NoisuyMatran(C$3:G$3, $B$4:$B$9, C$4:G$9, C12, C13)"
     ws.Range("C14").Font.Bold = True
+    ws.Range("C14").Font.Size = 11
+    ws.Range("C14").Font.Color = RGB(0, 100, 0)
+    ws.Range("C14").Interior.Color = RGB(210, 245, 210)
+    ws.Range("C14").NumberFormat = "0.0000"
     
-    ws.Range("B15").Value = "KET QUA NOI SUY (Alpha):"
-    ws.Range("B15").Font.Bold = True
-    ws.Range("C15").Formula = "=NoisuyMatran(C$3:G$3, $B$4:$B$9, C$4:G$9, C13, C14)"
-    ws.Range("C15").Font.Bold = True
-    ws.Range("C15").Font.Size = 12
-    ws.Range("C15").Font.Color = RGB(0, 100, 0)
-    ws.Range("C15").Interior.Color = RGB(210, 245, 210)
-    ws.Range("C15").NumberFormat = "0.0000"
+    ' PHAN 2: BANG TRA DAY SO 1 CHIEU (BEN PHAI)
+    ws.Range("I2:L2").Merge
+    ws.Range("I2").Value = "2. BANG TRA DAY SO 1 CHIEU (HAM =NoisuyDay)"
+    ws.Range("I2").Font.Bold = True
+    ws.Range("I2").Font.Size = 12
+    ws.Range("I2").Font.Color = RGB(0, 51, 102)
     
-    ws.Range("E12").Value = "GIAI THICH CONG THUC:"
-    ws.Range("E12").Font.Bold = True
-    ws.Range("E13").Value = "=NoisuyMatran(Xk, Yk, GT, Xu, Yu)"
-    ws.Range("E13").Font.Bold = True
-    ws.Range("E14").Value = "- Xk: Hang moc ngang C3:G3 (Mau xanh duong)"
-    ws.Range("E15").Value = "- Yk: Cot moc doc B4:B9 (Mau vang cam)"
-    ws.Range("E16").Value = "- GT: Ma tran du lieu C4:G9 (Mau trang)"
-    ws.Range("E17").Value = "- Xu, Yu: O gia tri can tra C13, C14"
+    ws.Range("I3").Value = "Moc X"
+    ws.Range("J3").Value = "Gia Tri Y"
+    ws.Range("I3:J3").Interior.Color = RGB(220, 235, 252)
+    ws.Range("I3:J3").Font.Bold = True
+    ws.Range("I3:J3").HorizontalAlignment = xlCenter
     
-    ws.Columns("B:G").AutoFit
-    InsertNoiSuyToActiveWorkbook showMsg:=False
+    ws.Range("I4:I10").Value = Application.Transpose(Array(10, 20, 30, 40, 50, 75, 100))
+    ws.Range("J4:J10").Value = Application.Transpose(Array(1.25, 2.4, 3.65, 4.8, 6.1, 9.25, 12.5))
+    ws.Range("I3:J10").Borders.LineStyle = xlContinuous
+    ws.Range("I4:J10").HorizontalAlignment = xlRight
     
-    If showMsg Then MsgBox "DA TAO BANG TRA MA TRAN 2D MAU TAI SHEET '" & sheetName & "'!" & vbCrLf & vbCrLf & _
-           "Bang da gan san cong thuc =NoisuyMatran(...) hoan chinh de ban tham khao.", vbInformation, "AVTool"
-End Sub
-
-Public Sub CreateSampleTableDay(Optional ByVal showMsg As Boolean = True)
-    Dim wb As Workbook, ws As Worksheet
-    Dim sheetName As String
-    Dim idx As Long
+    ' Tra cuu 1D
+    ws.Range("I12").Value = "Gia tri X can tra:"
+    ws.Range("J12").Value = 35
+    ws.Range("J12").Interior.Color = RGB(255, 255, 200)
+    ws.Range("I13").Value = "KET QUA NOI SUY:"
+    ws.Range("I13").Font.Bold = True
+    ws.Range("J13").Formula = "=NoisuyDay($I$4:$I$10, $J$4:$J$10, J12)"
+    ws.Range("J13").Font.Bold = True
+    ws.Range("J13").Font.Size = 11
+    ws.Range("J13").Font.Color = RGB(0, 100, 0)
+    ws.Range("J13").Interior.Color = RGB(210, 245, 210)
+    ws.Range("J13").NumberFormat = "0.00"
     
-    On Error Resume Next
-    Set wb = ActiveWorkbook
-    If wb Is Nothing Then
-        MsgBox "Vui long mo mot file Excel de tao bang mau!", vbExclamation, "AVTool"
-        Exit Sub
-    End If
+    ' PHAN 3: NOI SUY 2 DIEM (=Noisuy2b)
+    ws.Range("I15:L15").Merge
+    ws.Range("I15").Value = "3. NOI SUY 2 DIEM NHANH: =Noisuy2b(X1, Y1, X2, Y2, X)"
+    ws.Range("I15").Font.Bold = True
+    ws.Range("I15").Font.Color = RGB(150, 50, 0)
+    ws.Range("I16").Value = "Vi du: =Noisuy2b(10, 100, 20, 200, 15) -> Ket qua: 150"
     
-    sheetName = "Mau_NoiSuy_1D"
-    idx = 1
-    Do While True
-        Set ws = Nothing
-        Set ws = wb.Worksheets(sheetName)
-        If ws Is Nothing Then Exit Do
-        idx = idx + 1
-        sheetName = "Mau_NoiSuy_1D_" & idx
-    Loop
-    
-    Set ws = wb.Worksheets.Add(After:=wb.ActiveSheet)
-    ws.Name = sheetName
-    
-    ws.Range("B2:D2").Merge
-    ws.Range("B2").Value = "BANG TRA DAY SO 1 CHIEU MAU (NOISUYDAY)"
-    ws.Range("B2").Font.Bold = True
-    ws.Range("B2").Font.Size = 13
-    ws.Range("B2").Font.Color = RGB(0, 51, 102)
-    
-    ws.Range("B4").Value = "Moc X"
-    ws.Range("C4").Value = "Gia Tri Y"
-    ws.Range("B4:C4").Interior.Color = RGB(220, 235, 252)
-    ws.Range("B4:C4").Font.Bold = True
-    ws.Range("B4:C4").HorizontalAlignment = xlCenter
-    
-    ws.Range("B5:B11").Value = Application.Transpose(Array(10, 20, 30, 40, 50, 75, 100))
-    ws.Range("C5:C11").Value = Application.Transpose(Array(1.25, 2.4, 3.65, 4.8, 6.1, 9.25, 12.5))
-    ws.Range("B4:C11").Borders.LineStyle = xlContinuous
-    ws.Range("B5:C11").HorizontalAlignment = xlRight
-    
-    ws.Range("E4").Value = "TRA CUU NOI SUY 1 CHIEU:"
-    ws.Range("E4").Font.Bold = True
-    ws.Range("E5").Value = "Gia tri X can tra (Xu):"
-    ws.Range("F5").Value = 35
-    ws.Range("F5").Interior.Color = RGB(255, 255, 200)
-    ws.Range("F5").Font.Bold = True
-    
-    ws.Range("E6").Value = "KET QUA NOI SUY (Y):"
-    ws.Range("E6").Font.Bold = True
-    ws.Range("F6").Formula = "=NoisuyDay($B$5:$B$11, $C$5:$C$11, F5)"
-    ws.Range("F6").Font.Bold = True
-    ws.Range("F6").Font.Size = 12
-    ws.Range("F6").Font.Color = RGB(0, 100, 0)
-    ws.Range("F6").Interior.Color = RGB(210, 245, 210)
-    ws.Range("F6").NumberFormat = "0.00"
-    
-    ws.Columns("B:G").AutoFit
-    InsertNoiSuyToActiveWorkbook showMsg:=False
-    
-    If showMsg Then MsgBox "DA TAO BANG TRA DAY SO 1D MAU TAI SHEET '" & sheetName & "'!" & vbCrLf & vbCrLf & _
-           "Bang da gan san cong thuc =NoisuyDay(...) hoan chinh de ban tham khao.", vbInformation, "AVTool"
-End Sub
-
-Public Sub CreateSampleTableThep(Optional ByVal showMsg As Boolean = True)
-    Dim wb As Workbook, ws As Worksheet
-    Dim sheetName As String
-    Dim idx As Long, r As Long, c As Long
-    Dim phiArr As Variant
-    
-    On Error Resume Next
-    Set wb = ActiveWorkbook
-    If wb Is Nothing Then
-        MsgBox "Vui long mo mot file Excel de tao bang mau!", vbExclamation, "AVTool"
-        Exit Sub
-    End If
-    
-    sheetName = "Bang_Tra_Thep"
-    idx = 1
-    Do While True
-        Set ws = Nothing
-        Set ws = wb.Worksheets(sheetName)
-        If ws Is Nothing Then Exit Do
-        idx = idx + 1
-        sheetName = "Bang_Tra_Thep_" & idx
-    Loop
-    
-    Set ws = wb.Worksheets.Add(After:=wb.ActiveSheet)
-    ws.Name = sheetName
-    
-    ws.Range("B2:L2").Merge
-    ws.Range("B2").Value = "BANG TRA DIEN TICH COT THEP (cm2) THEO DUONG KINH & SO THANH"
-    ws.Range("B2").Font.Bold = True
-    ws.Range("B2").Font.Size = 13
-    ws.Range("B2").Font.Color = RGB(0, 51, 102)
-    
-    ws.Range("B4").Value = "Phi (mm)"
-    ws.Range("B4").Font.Bold = True
-    ws.Range("B4").Interior.Color = RGB(220, 235, 252)
-    ws.Range("B4").HorizontalAlignment = xlCenter
-    
-    For c = 1 To 10
-        ws.Cells(4, 2 + c).Value = c & " thanh"
-        ws.Cells(4, 2 + c).Font.Bold = True
-        ws.Cells(4, 2 + c).Interior.Color = RGB(220, 235, 252)
-        ws.Cells(4, 2 + c).HorizontalAlignment = xlCenter
-    Next c
-    
-    phiArr = Array(6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 30, 32, 36, 40)
-    For r = 0 To UBound(phiArr)
-        ws.Cells(5 + r, 2).Value = phiArr(r)
-        ws.Cells(5 + r, 2).Font.Bold = True
-        ws.Cells(5 + r, 2).Interior.Color = RGB(255, 242, 204)
-        ws.Cells(5 + r, 2).HorizontalAlignment = xlCenter
-        
-        For c = 1 To 10
-            ' Dien tich cm2 = c * Dt(phi) * 10000
-            ws.Cells(5 + r, 2 + c).Formula = "=" & c & " * Dt($B" & (5 + r) & ") * 10000"
-            ws.Cells(5 + r, 2 + c).NumberFormat = "0.00"
-        Next c
-    Next r
-    
-    ws.Range("B4:L" & (4 + UBound(phiArr) + 1)).Borders.LineStyle = xlContinuous
     ws.Columns("B:L").AutoFit
     InsertNoiSuyToActiveWorkbook showMsg:=False
     
-    If showMsg Then MsgBox "DA TAO BANG TRA DIEN TICH COT THEP TAI SHEET '" & sheetName & "'!" & vbCrLf & vbCrLf & _
-           "Bang da tinh toan san tu Phi 6 den Phi 40 cho 1 den 10 thanh bang ham =Dt(...).", vbInformation, "AVTool"
+    If showMsg Then
+        MsgBoxUni "\u0110\u00C3 T\u1EA0O B\u1EA2NG TRA M\u1EAEU T\u1EA0I SHEET '" & sheetName & "' TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
+                  "Sheet \u0111\u00E3 c\u00F3 s\u1EB5n c\u1EA3 B\u1EA3ng Ma tr\u1EADn 2D v\u00E0 D\u00E3y s\u1ED1 1D \u0111\u1EC3 b\u1EA1n tham kh\u1EA3o v\u00E0 s\u1EED d\u1EE5ng ngay.", vbInformation, "AVTool"
+    End If
 End Sub

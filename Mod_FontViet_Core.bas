@@ -731,10 +731,8 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         ' Noi suy & Bang tra
         Case "btnNoiSuyMatran": ShowNoiSuyMatran
         Case "btnNoiSuyDay": ShowNoiSuyDay
-        Case "btnNoiSuy2b": ShowNoiSuy2b
-        Case "btnTinhThep": ShowTinhThep
-        Case "btnInsertNoiSuy": InsertNoiSuyToActiveWorkbook True
-        Case "btnTaoBangMau": CreateSampleTableMatran
+        Case "btnTaoBangMau": CreateSampleTableAll True
+        Case "btnHuongDanNoiSuy": ShowHuongDanNoiSuy
         
         ' Scope
         Case "btnScopeSelection": gProcessScope = 1: MsgBox "Da dat pham vi: Vung dang chon (Selection)", vbInformation, "AVTool"
