@@ -743,12 +743,12 @@ Private Sub UserForm_Initialize()
     
     optScopeSheet.Value = True
     If Not ActiveSheet Is Nothing Then
-        optScopeSheet.Caption = UniText("{esc('Sheet hiện tại (')}") & ActiveSheet.Name & ")"
+        optScopeSheet.Caption = UniText("{esc('Sheet hiện tại: ')}") & ActiveSheet.Name
     Else
         optScopeSheet.Caption = UniText("{esc('Sheet hiện tại')}")
     End If
     optScopeWorkbook.Caption = UniText("{esc('Toàn bộ các Sheet trong File (Workbook)')}")
-    optScopeSelection.Caption = UniText("{esc('Vùng đang chọn (Selection)')}")
+    optScopeSelection.Caption = UniText("{esc('Chỉ vùng ô đang chọn (Selection)')}")
     
     chkCleanPath.Caption = UniText("{esc('Xóa đường dẫn ngoài dính vào DValue (Đưa về =DValue())')}")
     chkCleanPath.Value = True
@@ -1273,83 +1273,83 @@ try {{
     # =========================================================================
     $form4 = $wb.VBProject.VBComponents.Add(3)
     $form4.Name = "frmFixDValue"
-    $form4.Properties.Item("Width").Value = 440
-    $form4.Properties.Item("Height").Value = 368
+    $form4.Properties.Item("Width").Value = 460
+    $form4.Properties.Item("Height").Value = 405
     $form4.Properties.Item("Caption").Value = "AVTool - Sua Loi Duong Dan DValue & Cong Thuc"
 
     # Header
     $hFix = $form4.Designer.Controls.Add("Forms.Label.1", "lblHeader")
     $hFix.Caption = "SUA LOI DUONG DAN DVALUE (#NAME?)"
-    $hFix.Left = 16; $hFix.Top = 10; $hFix.Width = 400; $hFix.Height = 18
+    $hFix.Left = 16; $hFix.Top = 10; $hFix.Width = 420; $hFix.Height = 18
 
     $sFix = $form4.Designer.Controls.Add("Forms.Label.1", "lblSub")
     $sFix.Caption = "Tu dong cat bo duong dan file la, khoi phuc cong thuc DValue tuc thi"
-    $sFix.Left = 16; $sFix.Top = 28; $sFix.Width = 400; $sFix.Height = 16
+    $sFix.Left = 16; $sFix.Top = 28; $sFix.Width = 420; $sFix.Height = 16
 
     # Frame 1: Status
     $frSta = $form4.Designer.Controls.Add("Forms.Frame.1", "fraStatus")
     $frSta.Caption = " Tinh trang quet trong Workbook "
-    $frSta.Left = 16; $frSta.Top = 46; $frSta.Width = 398; $frSta.Height = 102
+    $frSta.Left = 16; $frSta.Top = 46; $frSta.Width = 418; $frSta.Height = 102
 
     $lbSta = $frSta.Controls.Add("Forms.Label.1", "lblStatusSummary")
     $lbSta.Caption = "Dang quet tinh trang..."
-    $lbSta.Left = 12; $lbSta.Top = 16; $lbSta.Width = 375; $lbSta.Height = 18
+    $lbSta.Left = 12; $lbSta.Top = 16; $lbSta.Width = 395; $lbSta.Height = 18
 
     $txDet = $frSta.Controls.Add("Forms.TextBox.1", "txtDetails")
-    $txDet.Left = 12; $txDet.Top = 34; $txDet.Width = 375; $txDet.Height = 58
+    $txDet.Left = 12; $txDet.Top = 34; $txDet.Width = 395; $txDet.Height = 58
     $txDet.MultiLine = $true
     $txDet.ScrollBars = 2
     $txDet.Locked = $true
     $txDet.SpecialEffect = 0
     $txDet.BorderStyle = 1
 
-    # Frame 2: Scope
+    # Frame 2: Scope (Vertical Layout - completely spacious)
     $frSc = $form4.Designer.Controls.Add("Forms.Frame.1", "fraScope")
     $frSc.Caption = " Pham vi thuc hien "
-    $frSc.Left = 16; $frSc.Top = 154; $frSc.Width = 398; $frSc.Height = 48
+    $frSc.Left = 16; $frSc.Top = 154; $frSc.Width = 418; $frSc.Height = 86
 
     $opScS = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeSheet")
     $opScS.Caption = "Sheet hien tai"
-    $opScS.Left = 12; $opScS.Top = 16; $opScS.Width = 150; $opScS.Height = 20
+    $opScS.Left = 12; $opScS.Top = 16; $opScS.Width = 395; $opScS.Height = 20
 
     $opScW = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeWorkbook")
-    $opScW.Caption = "Toan bo cac Sheet"
-    $opScW.Left = 168; $opScW.Top = 16; $opScW.Width = 145; $opScW.Height = 20
+    $opScW.Caption = "Toan bo cac Sheet trong File (Workbook)"
+    $opScW.Left = 12; $opScW.Top = 38; $opScW.Width = 395; $opScW.Height = 20
 
     $opScSl = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeSelection")
-    $opScSl.Caption = "Vung chon"
-    $opScSl.Left = 318; $opScSl.Top = 16; $opScSl.Width = 75; $opScSl.Height = 20
+    $opScSl.Caption = "Chi vung o dang chon (Selection)"
+    $opScSl.Left = 12; $opScSl.Top = 60; $opScSl.Width = 395; $opScSl.Height = 20
 
     # Frame 3: Options
     $frOptD = $form4.Designer.Controls.Add("Forms.Frame.1", "fraOptions")
     $frOptD.Caption = " Tuy chon sua loi "
-    $frOptD.Left = 16; $frOptD.Top = 208; $frOptD.Width = 398; $frOptD.Height = 76
+    $frOptD.Left = 16; $frOptD.Top = 246; $frOptD.Width = 418; $frOptD.Height = 76
 
     $ckCln = $frOptD.Controls.Add("Forms.CheckBox.1", "chkCleanPath")
     $ckCln.Caption = "Xoa duong dan ngoai dinh vao DValue (Dua ve =DValue())"
-    $ckCln.Left = 12; $ckCln.Top = 15; $ckCln.Width = 375; $ckCln.Height = 18
+    $ckCln.Left = 12; $ckCln.Top = 15; $ckCln.Width = 395; $ckCln.Height = 18
 
     $ckOth = $frOptD.Controls.Add("Forms.CheckBox.1", "chkNormalizeOthers")
     $ckOth.Caption = "Chuan hoa cac ham khoi luong cu khac (=Tinh, =Eval, =DienGiai)"
-    $ckOth.Left = 12; $ckOth.Top = 33; $ckOth.Width = 375; $ckOth.Height = 18
+    $ckOth.Left = 12; $ckOth.Top = 33; $ckOth.Width = 395; $ckOth.Height = 18
 
     $ckRec = $frOptD.Controls.Add("Forms.CheckBox.1", "chkRecalculate")
     $ckRec.Caption = "Tu dong tinh toan lai toan bo sau khi sua (CalculateFullRebuild)"
-    $ckRec.Left = 12; $ckRec.Top = 51; $ckRec.Width = 375; $ckRec.Height = 18
+    $ckRec.Left = 12; $ckRec.Top = 51; $ckRec.Width = 395; $ckRec.Height = 18
 
     # Bottom Buttons
     $btRsc = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnRescan")
     $btRsc.Caption = "Quet lai"
-    $btRsc.Left = 16; $btRsc.Top = 295; $btRsc.Width = 90; $btRsc.Height = 28
+    $btRsc.Left = 16; $btRsc.Top = 330; $btRsc.Width = 95; $btRsc.Height = 28
 
     $btFx = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnFix")
     $btFx.Caption = "SUA LOI NGAY"
-    $btFx.Left = 195; $btFx.Top = 295; $btFx.Width = 125; $btFx.Height = 28
+    $btFx.Left = 205; $btFx.Top = 330; $btFx.Width = 130; $btFx.Height = 28
     $btFx.Default = $true
 
     $btClD = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
     $btClD.Caption = "Dong"
-    $btClD.Left = 328; $btClD.Top = 295; $btClD.Width = 86; $btClD.Height = 28
+    $btClD.Left = 344; $btClD.Top = 330; $btClD.Width = 90; $btClD.Height = 28
     $btClD.Cancel = $true
 
     $fcode4 = @'
