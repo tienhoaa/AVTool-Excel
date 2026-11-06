@@ -941,10 +941,12 @@ End Sub
 # =============================================================================
 code_frmNoiSuyMatran = r"""#If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowW Lib "user32" (ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr) As LongPtr
     Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
     Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowW Lib "user32" (ByVal lpClassName As Long, ByVal lpWindowName As Long) As Long
     Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
     Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
 #End If
@@ -1011,7 +1013,9 @@ Private Sub UserForm_Activate()
     #Else
         Dim hWndForm As Long
     #End If
-    hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyMatran_Win")
+    hWndForm = FindWindowW(0, StrPtr("AVTool_NoiSuyMatran_Win"))
+    If hWndForm = 0 Then hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyMatran_Win")
+    If hWndForm = 0 Then hWndForm = FindWindowA(vbNullString, "AVTool_NoiSuyMatran_Win")
     If hWndForm <> 0 Then
         SetWindowTextW hWndForm, StrPtr(UniText("AVTool - N\u1ED9i Suy Ma Tr\u1EADn 2 Chi\u1EC1u (2D Bilinear)"))
     End If
@@ -1254,10 +1258,12 @@ End Sub
 
 code_frmNoiSuyDay = r"""#If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowW Lib "user32" (ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr) As LongPtr
     Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
     Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowW Lib "user32" (ByVal lpClassName As Long, ByVal lpWindowName As Long) As Long
     Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
     Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
 #End If
@@ -1322,7 +1328,9 @@ Private Sub UserForm_Activate()
     #Else
         Dim hWndForm As Long
     #End If
-    hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyDay_Win")
+    hWndForm = FindWindowW(0, StrPtr("AVTool_NoiSuyDay_Win"))
+    If hWndForm = 0 Then hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyDay_Win")
+    If hWndForm = 0 Then hWndForm = FindWindowA(vbNullString, "AVTool_NoiSuyDay_Win")
     If hWndForm <> 0 Then
         SetWindowTextW hWndForm, StrPtr(UniText("AVTool - N\u1ED9i Suy D\u00E3y S\u1ED1 1 Chi\u1EC1u (1D Linear)"))
     End If

@@ -14,9 +14,11 @@ set "DOWNLOAD_URL=https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/T
 
 if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 
-echo [1/2] Dang tai ban moi nhat tu GitHub...
+echo [1/3] Dang tai ban moi nhat tu GitHub...
 curl.exe -L -s -o "%TEMP_FILE%" "%DOWNLOAD_URL%"
 curl.exe -L -s -o "%TARGET_DIR%\TN_FontViet_Pro_2026.intellisense.xml" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.intellisense.xml"
+curl.exe -L -s -o "%TARGET_DIR%\ExcelDna.IntelliSense.xll" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/ExcelDna.IntelliSense.xll"
+curl.exe -L -s -o "%TARGET_DIR%\ExcelDna.IntelliSense64.xll" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/ExcelDna.IntelliSense64.xll"
 
 if not exist "%TEMP_FILE%" (
     echo.
@@ -25,7 +27,7 @@ if not exist "%TEMP_FILE%" (
     exit /b
 )
 
-echo [2/2] Dang cap nhat file Add-in vao he thong...
+echo [2/3] Dang cap nhat file Add-in vao he thong...
 set /a retry=0
 
 :WAIT_COPY
@@ -43,6 +45,12 @@ if errorlevel 1 (
 )
 
 del /f /q "%TEMP_FILE%" >nul 2>&1
+
+echo [3/3] Bo chan bao mat va dong bo cau hinh Excel...
+powershell -Command "Get-ChildItem -Path '%TARGET_DIR%' | Unblock-File -ErrorAction SilentlyContinue"
+reg add "HKCU\Software\Microsoft\Office\16.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Office\15.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Office\14.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
 
 echo.
 echo ================================================================

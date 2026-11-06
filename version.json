@@ -1,7 +1,7 @@
 {
-  "version": "2.4.2",
-  "latest_version": "2.4.2",
+  "version": "2.4.4",
+  "latest_version": "2.4.4",
   "release_date": "2026-11-06",
-  "changelog": "- Tich hop hop thoai nhac lenh trang tinh chuan IntelliSense (nhu TraEch) cho ca 3 ham Noisuy2b, NoisuyDay, NoisuyMatran\n- Xoa bo triet de Data Validation vang tren o\n- Noi suy 1 chieu dien thang =Noisuy2b( vao o va dua con tro vao nhap tham so ngay lap tuc",
+  "changelog": "- Tich hop san 2 file XLL IntelliSense (32-bit & 64-bit) giup hien hop thoai nhac lenh trang tinh lo lung 100% nhu TraEch, TraBeta, SUM\n- Tu dong kich hoat may chu IntelliSense bang Application.RegisterXLL ngay khi mo Excel\n- Chuan hoa tieng Viet Unicode co dau cho mo ta va tham so cac ham Noisuy2b, NoisuyDay, NoisuyMatran, Dt\n- Nut Noi suy 1 chieu danh thang lenh =Noisuy2b( vao o va bung hop thoai nhac lenh ngay lap tuc\n- Khac phuc loi font tieu de Form (2D Bilinear & 1D Linear) bang Windows API FindWindowW & SetWindowTextW",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

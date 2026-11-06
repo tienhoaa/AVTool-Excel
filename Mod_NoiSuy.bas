@@ -12,12 +12,14 @@ Option Explicit
 
 #If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowW Lib "user32" (ByVal lpClassName As LongPtr, ByVal lpWindowName As LongPtr) As LongPtr
     Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
     Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowW Lib "user32" (ByVal lpClassName As Long, ByVal lpWindowName As Long) As Long
     Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
-    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As LongPtr) As Long
+    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
 #End If
 
 Public Function UniText(ByVal s As String) As String
@@ -43,7 +45,9 @@ Public Sub SetFormTitleUnicode(ByVal formCaption As String, ByVal unicodeTitle A
         Dim hWndForm As Long
     #End If
     On Error Resume Next
-    hWndForm = FindWindowA("ThunderDFrame", formCaption)
+    hWndForm = FindWindowW(0, StrPtr(formCaption))
+    If hWndForm = 0 Then hWndForm = FindWindowA("ThunderDFrame", formCaption)
+    If hWndForm = 0 Then hWndForm = FindWindowA(vbNullString, formCaption)
     If hWndForm <> 0 Then
         SetWindowTextW hWndForm, StrPtr(UniText(unicodeTitle))
     End If
@@ -393,6 +397,8 @@ End Sub
 ' =============================================================================
 Public Sub ShowNoiSuyMatran()
     On Error Resume Next
+    LoadIntelliSenseXLL
+    RegisterMacroDescriptions
     If Val(Application.Version) >= 12 Then
         frmNoiSuyMatran.Show vbModeless
     Else
@@ -402,6 +408,8 @@ End Sub
 
 Public Sub ShowNoiSuyDay()
     On Error Resume Next
+    LoadIntelliSenseXLL
+    RegisterMacroDescriptions
     If Val(Application.Version) >= 12 Then
         frmNoiSuyDay.Show vbModeless
     Else
@@ -415,23 +423,28 @@ Public Sub ShowNoiSuy1Chieu()
     Set curCell = ActiveCell
     If curCell Is Nothing Then Exit Sub
     
-    ' 1. Tu dong nhung ham vao file neu can (tranh loi #NAME?)
-    InsertNoiSuyToActiveWorkbook showMsg:=False
+    ' 1. Kich hoat may chu IntelliSense va dang ky mo ta tham so cho Excel
+    LoadIntelliSenseXLL
+    RegisterMacroDescriptions
     
-    ' 2. Xoa sach Data Validation vang cu tren o (neu co)
+    ' 2. Dong cua so VBA Editor neu dang mo (tuyet doi khong hien code truoc mat nguoi dung)
+    If Not Application.VBE Is Nothing Then
+        Application.VBE.MainWindow.Visible = False
+    End If
+    
+    ' 3. Xoa sach Data Validation vang cu tren o (neu co)
     curCell.Validation.Delete
     
-    ' 3. Dien truc tiep cong thuc =Noisuy2b( vao o dang dat chuot
-    curCell.Formula = "=Noisuy2b(,,,,)"
-    curCell.Select
-    
-    ' 4. Dua con tro vao ngay sau dau ngoac de bat hop thoai nhac lenh IntelliSense trang tinh
-    Application.OnTime Now, "FocusFormulaNoisuy2b"
+    ' 4. Active cua so Excel va danh lenh =Noisuy2b( vao o dang dat chuot
+    AppActivate Application.Caption
+    Application.OnTime Now, "DoTypeNoisuy2b"
 End Sub
 
-Public Sub FocusFormulaNoisuy2b()
+Public Sub DoTypeNoisuy2b()
     On Error Resume Next
-    Application.SendKeys "{F2}^{HOME}{RIGHT 10}"
+    If ActiveCell Is Nothing Then Exit Sub
+    ActiveCell.Select
+    Application.SendKeys "=Noisuy2b{(}"
 End Sub
 
 ' =============================================================================
@@ -741,14 +754,15 @@ Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     AttachTooltipNoisuy2b ws.Range("C21")
     
     ws.Range("E18:G21").Merge
-    ws.Range("E18").Value = "Click chon o C21 de xem Tooltip huong dan bay ngay duoi o tinh!" & vbCrLf & _
-                           "Cu phap: =Noisuy2b(X1, Y1, X2, Y2, X)"
+    ws.Range("E18").Value = "Cu phap: =Noisuy2b(X1, Y1, X2, Y2, X)" & vbCrLf & _
+                           "- (X1, Y1): Moc duoi | (X2, Y2): Moc tren | X: Can tra" & vbCrLf & _
+                           "- Go '=Noisuy2b(' se tu dong hien hop thoai nhac lenh trang tinh lo lung!"
     ws.Range("E18").Font.Italic = True
     ws.Range("E18").Font.Size = 8.5
     ws.Range("E18").Font.Color = RGB(100, 100, 100)
     
     ws.Columns("B:L").AutoFit
-    InsertNoiSuyToActiveWorkbook showMsg:=False
+    ' InsertNoiSuyToActiveWorkbook showMsg:=False
     
     If showMsg Then
         MsgBoxUni "\u0110\u00C3 T\u1EA0O B\u1EA2NG TRA M\u1EAEU CHO C\u1EA2 3 LO\u1EA0I T\u1EA0I SHEET '" & sheetName & "' TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _

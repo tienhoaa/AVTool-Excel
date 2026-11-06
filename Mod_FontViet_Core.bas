@@ -776,7 +776,30 @@ End Sub
 Public Sub Auto_Open()
     On Error Resume Next
     InitSettings
+    LoadIntelliSenseXLL
+    RegisterMacroDescriptions
     Application.OnTime Now + TimeValue("00:00:03"), "CheckForUpdatesStartup"
+End Sub
+
+Public Sub LoadIntelliSenseXLL()
+    On Error Resume Next
+    Dim xllName As String, xllPath As String
+    #If Win64 Then
+        xllName = "ExcelDna.IntelliSense64.xll"
+    #Else
+        xllName = "ExcelDna.IntelliSense.xll"
+    #End If
+    
+    ' 1. Kiem tra thu muc hien tai cua file Add-in
+    xllPath = ThisWorkbook.Path & "\" & xllName
+    If Dir$(xllPath) = "" Then
+        ' 2. Kiem tra thu muc AddIns chuan cua Office
+        xllPath = Environ$("APPDATA") & "\Microsoft\AddIns\" & xllName
+    End If
+    
+    If Dir$(xllPath) <> "" Then
+        Application.RegisterXLL xllPath
+    End If
 End Sub
 
 Public Sub CheckForUpdatesStartup()
@@ -929,7 +952,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.4.2"
+    currentVer = "2.4.4"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled

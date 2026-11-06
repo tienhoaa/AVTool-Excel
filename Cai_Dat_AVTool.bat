@@ -34,16 +34,29 @@ if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 del /f /q "%APPDATA%\Microsoft\Excel\XLSTART\AVTool_FontViet.xlam" >nul 2>&1
 del /f /q "%APPDATA%\Microsoft\Excel\XLSTART\TN_FontViet_Pro_2026.xlam" >nul 2>&1
 
-:: 4. Copy file add-in va file ho tro cap nhat vao thu muc AddIns
+:: 4. Copy file add-in, file xml va cac file xll ho tro IntelliSense vao thu muc AddIns
 copy /y "%~dp0TN_FontViet_Pro_2026.xlam" "%TARGET_DIR%\TN_FontViet_Pro_2026.xlam" >nul
+if exist "%~dp0TN_FontViet_Pro_2026.intellisense.xml" (
+    copy /y "%~dp0TN_FontViet_Pro_2026.intellisense.xml" "%TARGET_DIR%\TN_FontViet_Pro_2026.intellisense.xml" >nul
+)
+if exist "%~dp0ExcelDna.IntelliSense.xll" (
+    copy /y "%~dp0ExcelDna.IntelliSense.xll" "%TARGET_DIR%\ExcelDna.IntelliSense.xll" >nul
+)
+if exist "%~dp0ExcelDna.IntelliSense64.xll" (
+    copy /y "%~dp0ExcelDna.IntelliSense64.xll" "%TARGET_DIR%\ExcelDna.IntelliSense64.xll" >nul
+)
 if exist "%~dp0Cap_Nhat_Online.bat" (
     copy /y "%~dp0Cap_Nhat_Online.bat" "%TARGET_DIR%\Cap_Nhat_Online.bat" >nul
 )
 
 :: 5. Bo chan bao mat cua Windows (Unblock)
-powershell -Command "Unblock-File -Path '%TARGET_DIR%\TN_FontViet_Pro_2026.xlam' -ErrorAction SilentlyContinue"
+powershell -Command "Get-ChildItem -Path '%TARGET_DIR%' | Unblock-File -ErrorAction SilentlyContinue"
 
-:: 6. Tu dong cap quyen VBA Project de chuc nang Chen DValue chay muot ma
+:: 6. Tu dong dang ky Addin vao Excel va cap quyen VBA Project
+reg add "HKCU\Software\Microsoft\Office\16.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Office\15.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
+reg add "HKCU\Software\Microsoft\Office\14.0\Excel\Options" /v OPEN /t REG_SZ /d "\"%TARGET_DIR%\TN_FontViet_Pro_2026.xlam\"" /f >nul 2>&1
+
 reg add "HKCU\Software\Microsoft\Office\16.0\Excel\Security" /v AccessVBOM /t REG_DWORD /d 1 /f >nul 2>&1
 reg add "HKCU\Software\Microsoft\Office\15.0\Excel\Security" /v AccessVBOM /t REG_DWORD /d 1 /f >nul 2>&1
 reg add "HKCU\Software\Microsoft\Office\14.0\Excel\Security" /v AccessVBOM /t REG_DWORD /d 1 /f >nul 2>&1
@@ -54,10 +67,10 @@ echo ================================================================
 echo.
 echo Tu bay gio:
 echo  - Moi khi ban mo Excel, tren thanh menu se co ngay tab [AVTool].
+echo  - Hop thoai nhac lenh trang tinh lo lung (IntelliSense) tu dong hoat dong khi go ham =Noisuy2b(, =NoisuyDay(, =NoisuyMatran(
 echo  - Nut [Doi Font Tieng Viet]: Chuyen font TCVN3, VNI -> Unicode (Khong mat cong thuc).
 echo  - Nut [Chen DValue Vao File]: Tinh khoi luong tu chu va tu hien Save As luu file .xls/.xlsm.
 echo  - Nut [In Nhieu Sheet]: Form 2 cot chon sheet can in, doi thu tu va xem Print Preview.
 echo  - Nut [Cap Nhat Ban Moi]: Kiem tra va cap nhat phien ban tu GitHub.
 echo.
-echo ================================================================
 pause
