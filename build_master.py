@@ -2602,9 +2602,10 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         <group id="grpUpdate" label="Hệ Thống">
           <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
         </group>
-      </tabs>
-    </ribbon>
-  </customUI>"""
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>"""
 
 ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
   <ribbon>
@@ -2634,9 +2635,10 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         <group id="grpUpdate" label="Hệ Thống">
           <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
         </group>
-      </tabs>
-    </ribbon>
-  </customUI>"""
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>"""
 
 for attempt in range(15):
     subprocess.run(["powershell", "-Command", "Stop-Process -Name 'EXCEL' -Force -ErrorAction SilentlyContinue"])
