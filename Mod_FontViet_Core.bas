@@ -728,6 +728,14 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         Case "btnBatchPrint": ShowBatchPrintForm
         Case "btnCheckUpdate": CheckForUpdates False
         
+        ' Noi suy & Bang tra
+        Case "btnNoiSuyMatran": ShowNoiSuyMatran
+        Case "btnNoiSuyDay": ShowNoiSuyDay
+        Case "btnNoiSuy2b": ShowNoiSuy2b
+        Case "btnTinhThep": ShowTinhThep
+        Case "btnInsertNoiSuy": InsertNoiSuyToActiveWorkbook True
+        Case "btnTaoBangMau": CreateSampleTableMatran
+        
         ' Scope
         Case "btnScopeSelection": gProcessScope = 1: MsgBox "Da dat pham vi: Vung dang chon (Selection)", vbInformation, "AVTool"
         Case "btnScopeSheet": gProcessScope = 2: MsgBox "Da dat pham vi: Sheet hien tai", vbInformation, "AVTool"
@@ -922,7 +930,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.2.0"
+    currentVer = "2.3.0"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled
