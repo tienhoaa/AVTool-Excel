@@ -690,6 +690,250 @@ Private Sub btnClose_Click()
 End Sub
 """
 
+
+# Form 4: frmFixDValue Code
+code_frmFixDValue = f"""Option Explicit
+
+#If VBA7 Then
+    Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+#Else
+    Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+#End If
+
+Private Function UniText(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\\u")
+    Loop
+    UniText = res
+End Function
+
+Private Function MsgBoxUni(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "") As Long
+    If Len(title) = 0 Then title = UniText("{esc('AVTool - Sửa Lỗi DValue')}")
+    MsgBoxUni = MessageBoxW(0, StrPtr(UniText(prompt)), StrPtr(title), buttons)
+End Function
+
+Private Sub UserForm_Initialize()
+    On Error Resume Next
+    Dim c As Control
+    For Each c In Me.Controls
+        c.Font.Name = "Segoe UI"
+        c.Font.Size = 9
+    Next c
+    lblHeader.Font.Size = 10.5
+    lblHeader.Font.Bold = True
+    lblSub.Font.Size = 8.5
+    lblStatusSummary.Font.Bold = True
+    btnFix.Font.Bold = True
+    btnFix.Font.Size = 9.5
+    btnRescan.Font.Size = 9
+    btnClose.Font.Size = 9.5
+    
+    Me.Caption = "AVTool - Sua Loi Duong Dan DValue & Cong Thuc"
+    lblHeader.Caption = UniText("{esc('SỬA LỖI ĐƯỜNG DẪN DVALUE (#NAME?)')}")
+    lblSub.Caption = UniText("{esc('Tự động cắt bỏ đường dẫn file lạ, khôi phục công thức khối lượng DValue tức thì')}")
+    
+    fraStatus.Caption = UniText("{esc(' Tình trạng quét trong Workbook ')}")
+    fraScope.Caption = UniText("{esc(' Phạm vi thực hiện ')}")
+    fraOptions.Caption = UniText("{esc(' Tùy chọn sửa lỗi ')}")
+    
+    optScopeSheet.Value = True
+    If Not ActiveSheet Is Nothing Then
+        optScopeSheet.Caption = UniText("{esc('Sheet hiện tại (')}") & ActiveSheet.Name & ")"
+    Else
+        optScopeSheet.Caption = UniText("{esc('Sheet hiện tại')}")
+    End If
+    optScopeWorkbook.Caption = UniText("{esc('Toàn bộ các Sheet trong File (Workbook)')}")
+    optScopeSelection.Caption = UniText("{esc('Vùng đang chọn (Selection)')}")
+    
+    chkCleanPath.Caption = UniText("{esc('Xóa đường dẫn ngoài dính vào DValue (Đưa về =DValue())')}")
+    chkCleanPath.Value = True
+    
+    chkNormalizeOthers.Caption = UniText("{esc('Chuẩn hóa các hàm khối lượng cũ khác (=Tinh, =Eval, =DienGiai)')}")
+    chkNormalizeOthers.Value = False
+    
+    chkRecalculate.Caption = UniText("{esc('Tự động tính toán lại toàn bộ sau khi sửa (CalculateFullRebuild)')}")
+    chkRecalculate.Value = True
+    
+    btnRescan.Caption = UniText("{esc('Quét lại')}")
+    btnFix.Caption = UniText("{esc('⚡ SỬA LỖI NGAY')}")
+    btnClose.Caption = UniText("{esc('Đóng')}")
+    
+    ScanErrors
+End Sub
+
+Private Sub ScanErrors()
+    On Error Resume Next
+    Dim wb As Workbook
+    Set wb = ActiveWorkbook
+    If wb Is Nothing Then
+        lblStatusSummary.Caption = UniText("{esc('Chưa mở file Excel nào để quét!')}")
+        txtDetails.Text = ""
+        Exit Sub
+    End If
+    
+    Dim totalErrDValue As Long, totalSheets As Long
+    Dim sheetList As String, sampleFormula As String
+    totalErrDValue = 0
+    totalSheets = 0
+    sheetList = ""
+    sampleFormula = ""
+    
+    Dim ws As Worksheet, fCells As Range, c As Range, f As String
+    For Each ws In wb.Worksheets
+        Set fCells = Nothing
+        Set fCells = ws.UsedRange.SpecialCells(xlCellTypeFormulas)
+        If Not fCells Is Nothing Then
+            Dim countInSheet As Long
+            countInSheet = 0
+            For Each c In fCells
+                f = c.Formula
+                If (InStr(1, f, "!DValue(", vbTextCompare) > 0 Or InStr(1, f, "!dvalue(", vbTextCompare) > 0) And (InStr(1, f, ":\\") > 0 Or InStr(1, f, "'.*!'") > 0 Or InStr(1, f, "[") > 0 Or InStr(1, f, ".xla") > 0) Then
+                    countInSheet = countInSheet + 1
+                    If Len(sampleFormula) = 0 Then sampleFormula = f
+                End If
+            Next c
+            If countInSheet > 0 Then
+                totalSheets = totalSheets + 1
+                totalErrDValue = totalErrDValue + countInSheet
+                sheetList = sheetList & "• Sheet '" & ws.Name & "': " & countInSheet & " " & UniText("{esc('ô')}") & vbCrLf
+            End If
+        End If
+    Next ws
+    
+    If totalErrDValue > 0 Then
+        lblStatusSummary.Caption = UniText("{esc('Phát hiện ')}") & totalErrDValue & UniText("{esc(' ô dính đường dẫn ngoài DValue trên ')}") & totalSheets & UniText("{esc(' Sheet!')}")
+        lblStatusSummary.ForeColor = RGB(180, 40, 0)
+        
+        Dim detailStr As String
+        detailStr = sheetList
+        If Len(sampleFormula) > 0 Then
+            detailStr = detailStr & vbCrLf & UniText("{esc('Ví dụ mẫu: ')}") & sampleFormula & " -> =DValue(...)"
+        End If
+        txtDetails.Text = detailStr
+    Else
+        lblStatusSummary.Caption = UniText("{esc('Không tìm thấy ô nào bị dính đường dẫn ngoài DValue.')}")
+        lblStatusSummary.ForeColor = RGB(0, 128, 0)
+        txtDetails.Text = UniText("{esc('Bảng tính hiện tại không bị lỗi đường dẫn DValue. Bạn vẫn có thể bấm Sửa Lỗi Ngay nếu muốn kiểm tra hoặc chuẩn hóa các hàm khác.')}")
+    End If
+End Sub
+
+Private Sub btnRescan_Click()
+    ScanErrors
+End Sub
+
+Private Sub btnFix_Click()
+    On Error GoTo ErrHandle
+    Dim wb As Workbook
+    Set wb = ActiveWorkbook
+    If wb Is Nothing Then
+        MsgBoxUni "{esc('Vui lòng mở một file Excel trước khi thực hiện!')}", vbExclamation
+        Exit Sub
+    End If
+    
+    Dim targetScope As Integer
+    If optScopeSheet.Value Then
+        targetScope = 1
+    ElseIf optScopeWorkbook.Value Then
+        targetScope = 2
+    Else
+        targetScope = 3
+    End If
+    
+    Dim bCleanPath As Boolean, bNormalizeOthers As Boolean, bRecalc As Boolean
+    bCleanPath = chkCleanPath.Value
+    bNormalizeOthers = chkNormalizeOthers.Value
+    bRecalc = chkRecalculate.Value
+    
+    If Not bCleanPath And Not bNormalizeOthers Then
+        MsgBoxUni "{esc('Vui lòng chọn ít nhất một tùy chọn sửa lỗi!')}", vbExclamation
+        Exit Sub
+    End If
+    
+    Dim targetSheets As New Collection
+    Select Case targetScope
+        Case 1
+            targetSheets.Add ActiveSheet
+        Case 2
+            Dim s As Worksheet
+            For Each s In wb.Worksheets
+                targetSheets.Add s
+            Next s
+        Case 3
+            targetSheets.Add ActiveSheet
+    End Select
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.EnableEvents = False
+    
+    Dim ws As Worksheet, rng As Range
+    Dim otherFuncs As Variant
+    otherFuncs = Array("Tinh", "Eval", "DienGiai", "CDTDValue", "TinhToan", "KL", "KLDT", "Cal", "Evaluate")
+    Dim ofName As Variant
+    
+    For Each ws In targetSheets
+        If targetScope = 3 Then
+            Set rng = Selection
+        Else
+            Set rng = ws.UsedRange
+        End If
+        
+        If Not rng Is Nothing Then
+            If bCleanPath Then
+                rng.Replace What:="'*!DValue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                rng.Replace What:="'*!dvalue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                rng.Replace What:="[*]!DValue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                rng.Replace What:="[*]!dvalue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                rng.Replace What:="*!DValue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                rng.Replace What:="*!dvalue(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+            End If
+            
+            If bNormalizeOthers Then
+                For Each ofName In otherFuncs
+                    rng.Replace What:="'*!" & CStr(ofName) & "(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                    rng.Replace What:="[*]!" & CStr(ofName) & "(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                    rng.Replace What:="*!" & CStr(ofName) & "(", Replacement:="DValue(", LookAt:=xlPart, MatchCase:=False
+                    rng.Replace What:="=" & CStr(ofName) & "(", Replacement:="=DValue(", LookAt:=xlPart, MatchCase:=False
+                Next ofName
+            End If
+        End If
+    Next ws
+    
+    If bRecalc Then
+        On Error Resume Next
+        Application.CalculateFullRebuild
+        If Err.Number <> 0 Then Application.Calculate
+        On Error GoTo ErrHandle
+    End If
+    
+    Application.EnableEvents = True
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    ScanErrors
+    MsgBoxUni "{esc('ĐÃ SỬA LỖI THÀNH CÔNG!')}" & vbCrLf & vbCrLf & _
+              "{esc('- Toàn bộ đường dẫn ngoài đã được loại bỏ.')}" & vbCrLf & _
+              "{esc('- Công thức đã được đưa về =DValue() chuẩn của AVTool.')}" & vbCrLf & _
+              "{esc('- Toàn bộ bảng tính đã được tính toán lại (Recalculated) tức thì!')}", vbInformation
+    Exit Sub
+    
+ErrHandle:
+    Application.EnableEvents = True
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    MsgBoxUni "{esc('Có lỗi xảy ra trong quá trình sửa lỗi: ')}" & Err.Description, vbCritical
+End Sub
+
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+"""
+
 ps_script = f"""
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
@@ -1024,6 +1268,96 @@ try {{
 '@
     $form3.CodeModule.AddFromString($fcode3)
 
+    # =========================================================================
+    # FORM 4: frmFixDValue (Fix DValue & Formula External Links Form)
+    # =========================================================================
+    $form4 = $wb.VBProject.VBComponents.Add(3)
+    $form4.Name = "frmFixDValue"
+    $form4.Properties.Item("Width").Value = 440
+    $form4.Properties.Item("Height").Value = 368
+    $form4.Properties.Item("Caption").Value = "AVTool - Sua Loi Duong Dan DValue & Cong Thuc"
+
+    # Header
+    $hFix = $form4.Designer.Controls.Add("Forms.Label.1", "lblHeader")
+    $hFix.Caption = "SUA LOI DUONG DAN DVALUE (#NAME?)"
+    $hFix.Left = 16; $hFix.Top = 10; $hFix.Width = 400; $hFix.Height = 18
+
+    $sFix = $form4.Designer.Controls.Add("Forms.Label.1", "lblSub")
+    $sFix.Caption = "Tu dong cat bo duong dan file la, khoi phuc cong thuc DValue tuc thi"
+    $sFix.Left = 16; $sFix.Top = 28; $sFix.Width = 400; $sFix.Height = 16
+
+    # Frame 1: Status
+    $frSta = $form4.Designer.Controls.Add("Forms.Frame.1", "fraStatus")
+    $frSta.Caption = " Tinh trang quet trong Workbook "
+    $frSta.Left = 16; $frSta.Top = 46; $frSta.Width = 398; $frSta.Height = 102
+
+    $lbSta = $frSta.Controls.Add("Forms.Label.1", "lblStatusSummary")
+    $lbSta.Caption = "Dang quet tinh trang..."
+    $lbSta.Left = 12; $lbSta.Top = 16; $lbSta.Width = 375; $lbSta.Height = 18
+
+    $txDet = $frSta.Controls.Add("Forms.TextBox.1", "txtDetails")
+    $txDet.Left = 12; $txDet.Top = 34; $txDet.Width = 375; $txDet.Height = 58
+    $txDet.MultiLine = $true
+    $txDet.ScrollBars = 2
+    $txDet.Locked = $true
+    $txDet.SpecialEffect = 0
+    $txDet.BorderStyle = 1
+
+    # Frame 2: Scope
+    $frSc = $form4.Designer.Controls.Add("Forms.Frame.1", "fraScope")
+    $frSc.Caption = " Pham vi thuc hien "
+    $frSc.Left = 16; $frSc.Top = 154; $frSc.Width = 398; $frSc.Height = 48
+
+    $opScS = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeSheet")
+    $opScS.Caption = "Sheet hien tai"
+    $opScS.Left = 12; $opScS.Top = 16; $opScS.Width = 150; $opScS.Height = 20
+
+    $opScW = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeWorkbook")
+    $opScW.Caption = "Toan bo cac Sheet"
+    $opScW.Left = 168; $opScW.Top = 16; $opScW.Width = 145; $opScW.Height = 20
+
+    $opScSl = $frSc.Controls.Add("Forms.OptionButton.1", "optScopeSelection")
+    $opScSl.Caption = "Vung chon"
+    $opScSl.Left = 318; $opScSl.Top = 16; $opScSl.Width = 75; $opScSl.Height = 20
+
+    # Frame 3: Options
+    $frOptD = $form4.Designer.Controls.Add("Forms.Frame.1", "fraOptions")
+    $frOptD.Caption = " Tuy chon sua loi "
+    $frOptD.Left = 16; $frOptD.Top = 208; $frOptD.Width = 398; $frOptD.Height = 76
+
+    $ckCln = $frOptD.Controls.Add("Forms.CheckBox.1", "chkCleanPath")
+    $ckCln.Caption = "Xoa duong dan ngoai dinh vao DValue (Dua ve =DValue())"
+    $ckCln.Left = 12; $ckCln.Top = 15; $ckCln.Width = 375; $ckCln.Height = 18
+
+    $ckOth = $frOptD.Controls.Add("Forms.CheckBox.1", "chkNormalizeOthers")
+    $ckOth.Caption = "Chuan hoa cac ham khoi luong cu khac (=Tinh, =Eval, =DienGiai)"
+    $ckOth.Left = 12; $ckOth.Top = 33; $ckOth.Width = 375; $ckOth.Height = 18
+
+    $ckRec = $frOptD.Controls.Add("Forms.CheckBox.1", "chkRecalculate")
+    $ckRec.Caption = "Tu dong tinh toan lai toan bo sau khi sua (CalculateFullRebuild)"
+    $ckRec.Left = 12; $ckRec.Top = 51; $ckRec.Width = 375; $ckRec.Height = 18
+
+    # Bottom Buttons
+    $btRsc = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnRescan")
+    $btRsc.Caption = "Quet lai"
+    $btRsc.Left = 16; $btRsc.Top = 295; $btRsc.Width = 90; $btRsc.Height = 28
+
+    $btFx = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnFix")
+    $btFx.Caption = "SUA LOI NGAY"
+    $btFx.Left = 195; $btFx.Top = 295; $btFx.Width = 125; $btFx.Height = 28
+    $btFx.Default = $true
+
+    $btClD = $form4.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
+    $btClD.Caption = "Dong"
+    $btClD.Left = 328; $btClD.Top = 295; $btClD.Width = 86; $btClD.Height = 28
+    $btClD.Cancel = $true
+
+    $fcode4 = @'
+{code_frmFixDValue}
+'@
+    $form4.CodeModule.AddFromString($fcode4)
+
+
 
     if (Test-Path '{temp_xlam}') {{ Remove-Item '{temp_xlam}' }}
     $wb.SaveAs('{temp_xlam}', 55)
@@ -1057,6 +1391,7 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         </group>
         <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+          <button id="btnFixDValue" label="Sửa Lỗi DValue (#NAME?)" size="large" imageMso="FormulaEvaluate" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
@@ -1082,6 +1417,7 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         </group>
         <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+          <button id="btnFixDValue" label="Sửa Lỗi DValue (#NAME?)" size="large" imageMso="FormulaEvaluate" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>

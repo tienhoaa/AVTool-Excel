@@ -42,9 +42,12 @@ Public Function DValue(ByVal Expr As Variant) As Variant
     s = Replace(s, ChrW(&HF7), "/")
     s = Replace(s, ChrW(&H2013), "-")
     s = Replace(s, ChrW(&H2014), "-")
-    s = Replace(s, "[", "(")
-    s = Replace(s, "]", ")")
-    s = Replace(s, "{", "(")
+    s = Replace(s, "[", "(")
+
+    s = Replace(s, "]", ")")
+
+    s = Replace(s, "{", "(")
+
     s = Replace(s, "}", ")")
 
     Calc = ""
@@ -233,3 +236,13 @@ Private Function DValue_IsUnitBracket(ByVal s As String, ByVal StartPos As Long)
 
     DValue_IsUnitBracket = hasUnit
 End Function
+
+
+Public Sub ShowFixDValueForm()
+    On Error Resume Next
+    If Val(Application.Version) >= 12 Then
+        frmFixDValue.Show vbModeless
+    Else
+        frmFixDValue.Show
+    End If
+End Sub

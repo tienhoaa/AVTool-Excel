@@ -1,7 +1,7 @@
 {
-  "version": "2.1.1",
-  "latest_version": "2.1.1",
-  "release_date": "2026-10-30",
-  "changelog": "- Nang cap dong co chuyen doi font toan dien: Ho tro chuyen doi 2 chieu linh hoat giua tat ca cac bang ma (Tu dong / Unicode / TCVN3 .VnTime / VNI-Windows)\n- Tu dong doi font phu hop (.VnTime, .VnArial, VNI-Times, Times New Roman, Arial)\n- Toi uu kieu chu In hoa / In thuong / Viet hoa dau tu chuan tieng Viet 100%\n- Tinh nang moi: Bang chuyen doi dau phan cach so (, va .) chuan Viet Nam / Quoc te\n- Tinh nang moi: Mo tat ca dong an va boi mau vang de kiem soat",
+  "version": "2.2.0",
+  "latest_version": "2.2.0",
+  "release_date": "2026-11-06",
+  "changelog": "- Tinh nang moi: Bang Sua Loi Duong Dan DValue (#NAME?) chuyen nghiep\n- Tu dong quet va phat hien cac o dinh duong dan file ngoai tren tung Sheet\n- Cat bo triet de moi tien to duong dan la, khoi phuc =DValue() chuan va ep tinh toan lai tuc thi\n- Tuy chon chuan hoa cac ham khoi luong cu khac (=Tinh, =Eval, =DienGiai) ve DValue\n- Nang cap dong co chuyen doi font da chieu va doi dau phan cach so",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

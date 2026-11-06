@@ -1,6 +1,3 @@
-temp_*
-check_*
-test_*
+~$*
 *.tmp
-*.log
-.git
+temp_*

@@ -722,6 +722,7 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         ' Form
         Case "btnOpenForm": ShowAVToolForm
         Case "btnInsertDValue": InsertDValueToActiveWorkbook
+        Case "btnFixDValue": ShowFixDValueForm
         Case "btnChangeSeparators": ShowNumberSeparatorForm
         Case "btnUnhideRows": UnhideAndHighlightRows
         Case "btnBatchPrint": ShowBatchPrintForm
@@ -921,7 +922,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.1.1"
+    currentVer = "2.2.0"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled
