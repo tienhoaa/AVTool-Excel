@@ -16,6 +16,7 @@ if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
 
 echo [1/2] Dang tai ban moi nhat tu GitHub...
 curl.exe -L -s -o "%TEMP_FILE%" "%DOWNLOAD_URL%"
+curl.exe -L -s -o "%TARGET_DIR%\TN_FontViet_Pro_2026.intellisense.xml" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.intellisense.xml"
 
 if not exist "%TEMP_FILE%" (
     echo.

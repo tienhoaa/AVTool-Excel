@@ -384,22 +384,8 @@ End Function
 ' -----------------------------------------------------------------------------
 Public Sub AttachTooltipNoisuy2b(ByVal rng As Range)
     On Error Resume Next
-    Dim msg As String
-    msg = UniText("H\u00E0m n\u1ED9i suy tuy\u1EBFn t\u00EDnh gi\u1EEFa 2 \u0111i\u1EC3m k\u1EB9p:" & vbCrLf & _
-                  "\u2022 Xs1, Ys1: To\u1EA1 \u0111\u1ED9 m\u1ED1c d\u01B0\u1EDBi (M\u1ED1c 1)" & vbCrLf & _
-                  "\u2022 Xs2, Ys2: To\u1EA1 \u0111\u1ED9 m\u1ED1c tr\u00EAn (M\u1ED1c 2)" & vbCrLf & _
-                  "\u2022 Xs: Gi\u00E1 tr\u1ECB m\u1ED1c c\u1EA7n tra c\u1EE9u" & vbCrLf & _
-                  "CT: Y = (Ys2-Ys1)*(Xs-Xs1)/(Xs2-Xs1) + Ys1")
-    With rng.Validation
-        .Delete
-        .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertInformation, Operator:=xlBetween, Formula1:="=TRUE"
-        .IgnoreBlank = True
-        .InCellDropdown = True
-        .InputTitle = "Noisuy2b(Xs1, Ys1, Xs2, Ys2, Xs)"
-        .InputMessage = msg
-        .ShowInput = True
-        .ShowError = False
-    End With
+    ' Xoa bo sach se Data Validation vang cu neu co tren o
+    rng.Validation.Delete
 End Sub
 
 ' =============================================================================
@@ -429,15 +415,23 @@ Public Sub ShowNoiSuy1Chieu()
     Set curCell = ActiveCell
     If curCell Is Nothing Then Exit Sub
     
-    ' 1. Tu dong nhung module noi suy ngam vao file hien tai (tranh loi #NAME?)
+    ' 1. Tu dong nhung ham vao file neu can (tranh loi #NAME?)
     InsertNoiSuyToActiveWorkbook showMsg:=False
     
-    ' 2. Gan Tooltip huong dan bay lo lung ngay duoi o tinh
-    AttachTooltipNoisuy2b curCell
+    ' 2. Xoa sach Data Validation vang cu tren o (neu co)
+    curCell.Validation.Delete
     
-    ' 3. Danh lenh vao o dang dat chuot
+    ' 3. Dien truc tiep cong thuc =Noisuy2b( vao o dang dat chuot
+    curCell.Formula = "=Noisuy2b(,,,,)"
     curCell.Select
-    Application.SendKeys "=Noisuy2b("
+    
+    ' 4. Dua con tro vao ngay sau dau ngoac de bat hop thoai nhac lenh IntelliSense trang tinh
+    Application.OnTime Now, "FocusFormulaNoisuy2b"
+End Sub
+
+Public Sub FocusFormulaNoisuy2b()
+    On Error Resume Next
+    Application.SendKeys "{F2}^{HOME}{RIGHT 10}"
 End Sub
 
 ' =============================================================================

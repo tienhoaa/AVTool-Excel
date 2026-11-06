@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<IntelliSense xmlns="http://schemas.excel-dna.net/intellisense/1.0">
+  <FunctionInfo>
+    <Function Name="Noisuy2b" Description="Hàm nội suy tuyến tính 1 chiều giữa 2 điểm kẹp (Xs1,Ys1) và (Xs2,Ys2)">
+      <Argument Name="Xs1" Description="Tọa độ X mốc dưới (Điểm 1)" />
+      <Argument Name="Ys1" Description="Giá trị Y mốc dưới (Điểm 1)" />
+      <Argument Name="Xs2" Description="Tọa độ X mốc trên (Điểm 2)" />
+      <Argument Name="Ys2" Description="Giá trị Y mốc trên (Điểm 2)" />
+      <Argument Name="Xs" Description="Giá trị mốc X cần tra cứu (nội suy)" />
+    </Function>
+    <Function Name="NoisuyDay" Description="Hàm nội suy tuyến tính dãy số 1 chiều theo hàng hoặc cột (tự động sắp xếp)">
+      <Argument Name="Xk" Description="Dãy mốc tra (Hàng hoặc cột tọa độ X)" />
+      <Argument Name="Yk" Description="Dãy giá trị tương ứng (Hàng hoặc cột giá trị Y)" />
+      <Argument Name="Xu" Description="Giá trị mốc X cần tra cứu" />
+    </Function>
+    <Function Name="NoisuyMatran" Description="Hàm nội suy ma trận 2 chiều song tuyến tính (Bilinear) bảng 2 trục X và Y">
+      <Argument Name="Xk" Description="Hàng mốc trục ngang (X)" />
+      <Argument Name="Yk" Description="Cột mốc trục dọc (Y)" />
+      <Argument Name="GT" Description="Vùng ma trận số liệu tương ứng" />
+      <Argument Name="Xu" Description="Giá trị mốc X cần tra cứu" />
+      <Argument Name="Yu" Description="Giá trị mốc Y cần tra cứu" />
+    </Function>
+    <Function Name="Dt" Description="Tính diện tích cốt thép tròn (mm -> m2): Dt = pi*d^2 / 4000000">
+      <Argument Name="d" Description="Đường kính thanh thép phi (mm)" />
+    </Function>
+  </FunctionInfo>
+</IntelliSense>

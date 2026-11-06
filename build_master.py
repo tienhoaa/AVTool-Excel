@@ -1515,6 +1515,49 @@ $excel.Visible = $false
 $excel.DisplayAlerts = $false
 try {{
     $wb = $excel.Workbooks.Add()
+
+    # Them Sheet _IntelliSense_ nhac lenh trang tinh chuan Excel-DNA cho tat ca cac ham noi suy
+    $wsIntel = $wb.Worksheets.Add()
+    $wsIntel.Name = "_IntelliSense_"
+    $wsIntel.Range("A1").Value = "FunctionInfo"
+    $wsIntel.Range("B1").Value = 1
+
+    # 1. Noisuy2b
+    $wsIntel.Range("A2").Value = "Noisuy2b"
+    $wsIntel.Range("B2").Value = "Ham noi suy tuyen tinh 1 chieu giua 2 diem kep (Xs1,Ys1) va (Xs2,Ys2)"
+    $wsIntel.Range("C2").Value = ""
+    $wsIntel.Range("D2").Value = "Xs1"; $wsIntel.Range("E2").Value = "Toa do X moc duoi (Diem 1)"
+    $wsIntel.Range("F2").Value = "Ys1"; $wsIntel.Range("G2").Value = "Gia tri Y moc duoi (Diem 1)"
+    $wsIntel.Range("H2").Value = "Xs2"; $wsIntel.Range("I2").Value = "Toa do X moc tren (Diem 2)"
+    $wsIntel.Range("J2").Value = "Ys2"; $wsIntel.Range("K2").Value = "Gia tri Y moc tren (Diem 2)"
+    $wsIntel.Range("L2").Value = "Xs";  $wsIntel.Range("M2").Value = "Gia tri moc X can tra cuu (noi suy)"
+
+    # 2. NoisuyDay
+    $wsIntel.Range("A3").Value = "NoisuyDay"
+    $wsIntel.Range("B3").Value = "Ham noi suy tuyen tinh day so 1 chieu theo hang hoac cot (tu dong sap xep)"
+    $wsIntel.Range("C3").Value = ""
+    $wsIntel.Range("D3").Value = "Xk";  $wsIntel.Range("E3").Value = "Day moc tra (Hang hoac cot toa do X)"
+    $wsIntel.Range("F3").Value = "Yk";  $wsIntel.Range("G3").Value = "Day gia tri tuong ung (Hang hoac cot gia tri Y)"
+    $wsIntel.Range("H3").Value = "Xu";  $wsIntel.Range("I3").Value = "Gia tri moc can tra cuu"
+
+    # 3. NoisuyMatran
+    $wsIntel.Range("A4").Value = "NoisuyMatran"
+    $wsIntel.Range("B4").Value = "Ham noi suy ma tran 2 chieu song tuyen tinh (Bilinear) bang 2 truc X va Y"
+    $wsIntel.Range("C4").Value = ""
+    $wsIntel.Range("D4").Value = "Xk";  $wsIntel.Range("E4").Value = "Hang moc truc ngang (X)"
+    $wsIntel.Range("F4").Value = "Yk";  $wsIntel.Range("G4").Value = "Cot moc truc doc (Y)"
+    $wsIntel.Range("H4").Value = "GT";  $wsIntel.Range("I4").Value = "Vung ma tran so lieu tuong ung"
+    $wsIntel.Range("J4").Value = "Xu";  $wsIntel.Range("K4").Value = "Gia tri moc X can tra cuu"
+    $wsIntel.Range("L4").Value = "Yu";  $wsIntel.Range("M4").Value = "Gia tri moc Y can tra cuu"
+
+    # 4. Dt
+    $wsIntel.Range("A5").Value = "Dt"
+    $wsIntel.Range("B5").Value = "Tinh dien tich cot thep tron (mm -> m2): Dt = pi*d^2 / 4000000"
+    $wsIntel.Range("C5").Value = ""
+    $wsIntel.Range("D5").Value = "d";   $wsIntel.Range("E5").Value = "Duong kinh thanh thep (mm)"
+
+    # An sheet _IntelliSense_
+    $wsIntel.Visible = 2
     
     # 1. Add Mod_FontViet_Core
     $modCore = $wb.VBProject.VBComponents.Add(1)

@@ -1,7 +1,7 @@
 {
-  "version": "2.4.1",
-  "latest_version": "2.4.1",
+  "version": "2.4.2",
+  "latest_version": "2.4.2",
   "release_date": "2026-11-06",
-  "changelog": "- Noi suy 1 chieu khong can form: bam nut tu dong danh lenh =Noisuy2b( vao o dang chon va bat Tooltip huong dan bay lo lung duoi o\n- Tinh gon toi da Ribbon: loai bo cac nut khong can thiet, chi giu lai 3 nut noi suy cot loi (Ma tran 2D, Day 1D, Noi suy 1 chieu)\n- Khac phuc triet de loi XML Ribbon va tu dong dong bo phien ban",
+  "changelog": "- Tich hop hop thoai nhac lenh trang tinh chuan IntelliSense (nhu TraEch) cho ca 3 ham Noisuy2b, NoisuyDay, NoisuyMatran\n- Xoa bo triet de Data Validation vang tren o\n- Noi suy 1 chieu dien thang =Noisuy2b( vao o va dua con tro vao nhap tham so ngay lap tuc",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }
