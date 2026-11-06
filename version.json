@@ -1,7 +1,7 @@
 {
-  "version": "2.3.0",
-  "latest_version": "2.3.0",
+  "version": "2.4.0",
+  "latest_version": "2.4.0",
   "release_date": "2026-11-06",
-  "changelog": "- Tinh nang moi: Bo 2 Form chuyen dung cho Noi suy Ma tran 2D va Day so 1D\n- Fix triet de loi font tieng Viet tren Form va cac hop thoai popup (chuan Unicode Windows API)\n- Fix loi #VALUE! khi noi suy day so (ho tro ca day ngang, doc, xu ly linh hoat dau cham va dau phay)\n- Tu dong dang ky Tooltips giai thich doi so trong hop thoai fx cho ham Noisuy2b, NoisuyDay, NoisuyMatran\n- Tu dong nhung ngam Mod_NoiSuy vao file giup chia se file sang may khac khong bi loi #NAME?\n- Nut Tao Bang Tra Mau (1D & 2D) truc quan tien loi\n- Giao dien Ribbon gon gang, chuyen nghiep",
+  "changelog": "- Tinh nang moi: Bo 3 Form chuyen dung cho ca 3 loai noi suy (Ma tran 2D, Day so 1D, Noi suy 1 chieu Noisuy2b)\n- Khac phuc triet de loi Title bar Form bi dau hoi '?' bang Win32 API SetWindowTextW chuan Unicode tieng Viet\n- Phuc hoi day du cac icon Ribbon sac net 100% (PivotTableInsert, AutoSum, EquationProfessional, TableInsert, Help)\n- Tu dong gan Tooltip lo lung duoi o tinh khi click chon o ket qua Noisuy2b (Data Validation Message)\n- Tuy chon chen thang '=Noisuy2b(' hoac cong thuc hoan chinh vao o\n- Tao Bang Tra Mau chuyen nghiep gom ca 3 loai (2D, 1D, 2B) tren cung mot Sheet\n- Tu dong nhung module noi suy ngam vao file, tinh gon giao dien",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

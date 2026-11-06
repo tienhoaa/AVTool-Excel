@@ -941,8 +941,12 @@ End Sub
 # =============================================================================
 code_frmNoiSuyMatran = r"""#If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+    Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
 #End If
 
 Private Function UniText(ByVal s As String) As String
@@ -976,7 +980,7 @@ Private Sub UserForm_Initialize()
     btnInsert.Font.Size = 9.5
     chkAbsolute.Value = True
     
-    Me.Caption = UniText("AVTool - N\u1ED9i Suy Ma Tr\u1EADn 2 Chi\u1EC1u (2D Bilinear)")
+    Me.Caption = "AVTool_NoiSuyMatran_Win"
     lblHeader.Caption = UniText("N\u1ED8I SUY MA TR\u1EACN 2 CHI\u1EC0U (B\u1EA2NG TRA 2 TR\u1EE4C X & Y)")
     lblSub.Caption = UniText("Tra c\u1EE9u song tuy\u1EBFn t\u00EDnh (Bilinear). T\u1EF1 \u0111\u1ED9ng kh\u1EDBp k\u00EDch th\u01B0\u1EDBc & sinh c\u00F4ng th\u1EE9c")
     fraTable.Caption = UniText(" Thi\u1EBFt l\u1EADp v\u00F9ng b\u1EA3ng tra ma tr\u1EADn ")
@@ -1000,6 +1004,19 @@ Private Sub UserForm_Initialize()
     End If
 End Sub
 
+Private Sub UserForm_Activate()
+    On Error Resume Next
+    #If VBA7 Then
+        Dim hWndForm As LongPtr
+    #Else
+        Dim hWndForm As Long
+    #End If
+    hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyMatran_Win")
+    If hWndForm <> 0 Then
+        SetWindowTextW hWndForm, StrPtr(UniText("AVTool - N\u1ED9i Suy Ma Tr\u1EADn 2 Chi\u1EC1u (2D Bilinear)"))
+    End If
+End Sub
+
 Private Sub btnClose_Click()
     Unload Me
 End Sub
@@ -1013,7 +1030,7 @@ Private Sub btnPickX_Click()
     Me.Show vbModeless
     If Not rng Is Nothing Then
         If chkAbsolute.Value Then
-            txtRangeX.Text = rng.Address(RowAbsolute:=True, ColumnAbsolute:=True)
+            txtRangeX.Text = rng.Address(True, True)
         Else
             txtRangeX.Text = rng.Address(False, False)
         End If
@@ -1030,7 +1047,7 @@ Private Sub btnPickY_Click()
     Me.Show vbModeless
     If Not rng Is Nothing Then
         If chkAbsolute.Value Then
-            txtRangeY.Text = rng.Address(RowAbsolute:=True, ColumnAbsolute:=True)
+            txtRangeY.Text = rng.Address(True, True)
         Else
             txtRangeY.Text = rng.Address(False, False)
         End If
@@ -1042,7 +1059,7 @@ Private Sub btnPickGT_Click()
     Dim rng As Range
     Me.Hide
     On Error Resume Next
-    Set rng = Application.InputBox(UniText("Ch\u1ECDn v\u00F9ng ma tr\u1EADn s\u1ED1 li\u1EC7u (GT):"), UniText("Ch\u1ECDn Ma Tr\u1EADn GT"), Type:=8)
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn v\u00F9ng Ma tr\u1EADn s\u1ED1 li\u1EC7u (GT):"), UniText("Ch\u1ECDn V\u00F9ng Ma Tr\u1EADn"), Type:=8)
     On Error GoTo 0
     Me.Show vbModeless
     If Not rng Is Nothing Then
@@ -1059,7 +1076,7 @@ Private Sub btnPickValX_Click()
     Dim rng As Range
     Me.Hide
     On Error Resume Next
-    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a gi\u00E1 tr\u1ECB Xu c\u1EA7n tra:"), UniText("Ch\u1ECDn \u00D4 Xu"), Type:=8)
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a gi\u00E1 tr\u1ECB m\u1ED1c Xu:"), UniText("Ch\u1ECDn \u00D4 Gi\u00E1 Tr\u1ECB Xu"), Type:=8)
     On Error GoTo 0
     Me.Show vbModeless
     If Not rng Is Nothing Then
@@ -1072,7 +1089,7 @@ Private Sub btnPickValY_Click()
     Dim rng As Range
     Me.Hide
     On Error Resume Next
-    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a gi\u00E1 tr\u1ECB Yu c\u1EA7n tra:"), UniText("Ch\u1ECDn \u00D4 Yu"), Type:=8)
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a gi\u00E1 tr\u1ECB m\u1ED1c Yu:"), UniText("Ch\u1ECDn \u00D4 Gi\u00E1 Tr\u1ECB Yu"), Type:=8)
     On Error GoTo 0
     Me.Show vbModeless
     If Not rng Is Nothing Then
@@ -1093,12 +1110,55 @@ Private Sub btnPickDest_Click()
     End If
 End Sub
 
-Private Sub txtRangeX_Change(): UpdatePreview: End Sub
-Private Sub txtRangeY_Change(): UpdatePreview: End Sub
-Private Sub txtRangeGT_Change(): UpdatePreview: End Sub
-Private Sub txtValX_Change(): UpdatePreview: End Sub
-Private Sub txtValY_Change(): UpdatePreview: End Sub
-Private Sub chkAbsolute_Click(): UpdatePreview: End Sub
+Private Sub txtRangeX_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtRangeY_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtRangeGT_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtValX_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtValY_Change()
+    UpdatePreview
+End Sub
+
+Private Sub chkAbsolute_Click()
+    Dim rX As Range, rY As Range, rGT As Range
+    On Error Resume Next
+    Set rX = Range(txtRangeX.Text)
+    Set rY = Range(txtRangeY.Text)
+    Set rGT = Range(txtRangeGT.Text)
+    If Not rX Is Nothing Then
+        If chkAbsolute.Value Then
+            txtRangeX.Text = rX.Address(True, True)
+        Else
+            txtRangeX.Text = rX.Address(False, False)
+        End If
+    End If
+    If Not rY Is Nothing Then
+        If chkAbsolute.Value Then
+            txtRangeY.Text = rY.Address(True, True)
+        Else
+            txtRangeY.Text = rY.Address(False, False)
+        End If
+    End If
+    If Not rGT Is Nothing Then
+        If chkAbsolute.Value Then
+            txtRangeGT.Text = rGT.Address(True, True)
+        Else
+            txtRangeGT.Text = rGT.Address(False, False)
+        End If
+    End If
+    UpdatePreview
+End Sub
 
 Private Sub UpdatePreview()
     Dim rX As Range, rY As Range, rGT As Range
@@ -1142,7 +1202,6 @@ Private Sub UpdatePreview()
     Else
         vX = Val(Replace(CStr(Range(sX).Value), ",", "."))
     End If
-    
     If IsNumeric(sY) Then
         vY = CDbl(sY)
         sY = Replace(sY, ",", ".")
@@ -1150,14 +1209,14 @@ Private Sub UpdatePreview()
         vY = Val(Replace(CStr(Range(sY).Value), ",", "."))
     End If
     
-    res = NoisuyMatran(rX, rY, rGT, vX, vY)
     formStr = "=NoisuyMatran(" & txtRangeX.Text & ", " & txtRangeY.Text & ", " & txtRangeGT.Text & ", " & sX & ", " & sY & ")"
     txtFormula.Text = formStr
     
-    If IsError(res) Then
-        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: \u274C L\u1ED7i t\u00EDnh to\u00E1n")
+    res = NoisuyMatran(rX, rY, rGT, vX, vY)
+    If IsError(res) Or VarType(res) = vbError Then
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: \u274C L\u1ED7i t\u00EDnh to\u00E1n (#VALUE!)")
     Else
-        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: " & Format(res, "0.0000"))
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: " & Format(res, "#,##0.0000"))
     End If
 End Sub
 
@@ -1193,13 +1252,14 @@ Private Sub btnSample_Click()
 End Sub
 """
 
-# =============================================================================
-# Form 6: frmNoiSuyDay (Chuan Unicode 100%)
-# =============================================================================
 code_frmNoiSuyDay = r"""#If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+    Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
 #End If
 
 Private Function UniText(ByVal s As String) As String
@@ -1233,7 +1293,7 @@ Private Sub UserForm_Initialize()
     btnInsert.Font.Size = 9.5
     chkAbsolute.Value = True
     
-    Me.Caption = UniText("AVTool - N\u1ED9i Suy D\u00E3y S\u1ED1 1 Chi\u1EC1u (1D Linear)")
+    Me.Caption = "AVTool_NoiSuyDay_Win"
     lblHeader.Caption = UniText("N\u1ED8I SUY D\u00C3Y S\u1ED0 1 CHI\u1EC0U (TUY\u1EBE N T\u00CDNH)")
     lblSub.Caption = UniText("Tra c\u1EE9u tuy\u1EBFn t\u00EDnh theo d\u00E3y h\u00E0ng ho\u1EB7c c\u1ED9t. T\u1EF1 \u0111\u1ED9ng s\u1EAFp x\u1EBFp m\u1ED1c t\u0103ng d\u1EA7n")
     fraTable.Caption = UniText(" Thi\u1EBFt l\u1EADp 2 d\u00E3y d\u1EEF li\u1EC7u b\u1EA3ng tra ")
@@ -1252,6 +1312,19 @@ Private Sub UserForm_Initialize()
     
     If Not ActiveCell Is Nothing Then
         txtDest.Text = ActiveCell.Address(False, False)
+    End If
+End Sub
+
+Private Sub UserForm_Activate()
+    On Error Resume Next
+    #If VBA7 Then
+        Dim hWndForm As LongPtr
+    #Else
+        Dim hWndForm As Long
+    #End If
+    hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuyDay_Win")
+    If hWndForm <> 0 Then
+        SetWindowTextW hWndForm, StrPtr(UniText("AVTool - N\u1ED9i Suy D\u00E3y S\u1ED1 1 Chi\u1EC1u (1D Linear)"))
     End If
 End Sub
 
@@ -1280,7 +1353,7 @@ Private Sub btnPickY_Click()
     Dim rng As Range
     Me.Hide
     On Error Resume Next
-    Set rng = Application.InputBox(UniText("Ch\u1ECDn d\u00E3y gi\u00E1 tr\u1ECB (D\u00E3y Y):"), UniText("Ch\u1ECDn D\u00E3y Gi\u00E1 Tr\u1ECB Y"), Type:=8)
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn d\u00E3y gi\u00E1 tr\u1ECB tra (D\u00E3y Y):"), UniText("Ch\u1ECDn D\u00E3y Gi\u00E1 Tr\u1ECB Y"), Type:=8)
     On Error GoTo 0
     Me.Show vbModeless
     If Not rng Is Nothing Then
@@ -1297,7 +1370,7 @@ Private Sub btnPickValX_Click()
     Dim rng As Range
     Me.Hide
     On Error Resume Next
-    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a gi\u00E1 tr\u1ECB Xu c\u1EA7n tra:"), UniText("Ch\u1ECDn \u00D4 Xu"), Type:=8)
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 ch\u1EE9a m\u1ED1c c\u1EA7n tra Xu:"), UniText("Ch\u1ECDn \u00D4 M\u1ED1c Xu"), Type:=8)
     On Error GoTo 0
     Me.Show vbModeless
     If Not rng Is Nothing Then
@@ -1318,10 +1391,39 @@ Private Sub btnPickDest_Click()
     End If
 End Sub
 
-Private Sub txtRangeX_Change(): UpdatePreview: End Sub
-Private Sub txtRangeY_Change(): UpdatePreview: End Sub
-Private Sub txtValX_Change(): UpdatePreview: End Sub
-Private Sub chkAbsolute_Click(): UpdatePreview: End Sub
+Private Sub txtRangeX_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtRangeY_Change()
+    UpdatePreview
+End Sub
+
+Private Sub txtValX_Change()
+    UpdatePreview
+End Sub
+
+Private Sub chkAbsolute_Click()
+    Dim rX As Range, rY As Range
+    On Error Resume Next
+    Set rX = Range(txtRangeX.Text)
+    Set rY = Range(txtRangeY.Text)
+    If Not rX Is Nothing Then
+        If chkAbsolute.Value Then
+            txtRangeX.Text = rX.Address(True, True)
+        Else
+            txtRangeX.Text = rX.Address(False, False)
+        End If
+    End If
+    If Not rY Is Nothing Then
+        If chkAbsolute.Value Then
+            txtRangeY.Text = rY.Address(True, True)
+        Else
+            txtRangeY.Text = rY.Address(False, False)
+        End If
+    End If
+    UpdatePreview
+End Sub
 
 Private Sub UpdatePreview()
     Dim rX As Range, rY As Range
@@ -1364,14 +1466,14 @@ Private Sub UpdatePreview()
         vX = Val(Replace(CStr(Range(sX).Value), ",", "."))
     End If
     
-    res = NoisuyDay(rX, rY, vX)
     formStr = "=NoisuyDay(" & txtRangeX.Text & ", " & txtRangeY.Text & ", " & sX & ")"
     txtFormula.Text = formStr
     
-    If IsError(res) Then
-        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: \u274C L\u1ED7i d\u1EEF li\u1EC7u tra")
+    res = NoisuyDay(rX, rY, vX)
+    If IsError(res) Or VarType(res) = vbError Then
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: \u274C L\u1ED7i t\u00EDnh to\u00E1n (#VALUE!)")
     Else
-        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: " & Format(res, "0.0000"))
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: " & Format(res, "#,##0.0000"))
     End If
 End Sub
 
@@ -1400,6 +1502,309 @@ Private Sub btnInsert_Click()
     
     MsgBoxUni "\u0110\u00C3 CH\u00C8N C\u00D4NG TH\u1EE8C V\u00C0O \u00D4 " & destRng.Address(False, False) & " TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
               "C\u00F4ng th\u1EE9c: " & txtFormula.Text, vbInformation, "AVTool"
+End Sub
+
+Private Sub btnSample_Click()
+    CreateSampleTableAll True
+End Sub
+"""
+
+code_frmNoiSuy1Chieu = r"""#If VBA7 Then
+    Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+    Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
+#Else
+    Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As Long) As Long
+#End If
+
+Private Function UniText(ByVal s As String) As String
+    Dim pos As Long, hexStr As String, res As String
+    res = s
+    pos = InStr(res, "\u")
+    Do While pos > 0
+        hexStr = Mid(res, pos + 2, 4)
+        res = Left(res, pos - 1) & ChrW(CLng("&H" & hexStr)) & Mid(res, pos + 6)
+        pos = InStr(res, "\u")
+    Loop
+    UniText = res
+End Function
+
+Private Function MsgBoxUni(ByVal prompt As String, Optional ByVal buttons As Long = 0, Optional ByVal title As String = "AVTool") As Long
+    MsgBoxUni = MessageBoxW(0, StrPtr(UniText(prompt)), StrPtr(UniText(title)), buttons)
+End Function
+
+Private Sub UserForm_Initialize()
+    On Error Resume Next
+    Dim c As Control
+    For Each c In Me.Controls
+        c.Font.Name = "Segoe UI"
+        c.Font.Size = 9
+    Next c
+    lblHeader.Font.Bold = True
+    lblHeader.Font.Size = 10.5
+    lblSub.Font.Size = 8.5
+    lblPreview.Font.Bold = True
+    btnInsert.Font.Bold = True
+    btnInsert.Font.Size = 9.5
+    btnInsertSyntax.Font.Bold = True
+    chkAbsolute.Value = True
+    chkAttachTooltip.Value = True
+    
+    Me.Caption = "AVTool_NoiSuy1Chieu_Win"
+    lblHeader.Caption = UniText("N\u1ED8I SUY 1 CHI\u1EC0U (TUY\u1EBE N T\u00CDNH 2 \u0110I\u1EC2M K\u1EB8P)")
+    lblSub.Caption = UniText("C\u00F4ng th\u1EE9c: =Noisuy2b(X1, Y1, X2, Y2, X). T\u1EF1 \u0111\u1ED9ng t\u00EDnh to\u00E1n & g\u1EAFn h\u01B0\u1EDBng d\u1EABn khi ch\u1ECDn \u00F4")
+    fraPoints.Caption = UniText(" Thi\u1EBFt l\u1EADp 2 \u0111i\u1EC3m m\u1ED1c c\u1EADn k\u1EB9p (\u0110i\u1EC3m 1 & \u0110i\u1EC3m 2) ")
+    lblX1.Caption = UniText("M\u1ED1c X1:")
+    lblY1.Caption = UniText("Gi\u00E1 tr\u1ECB Y1:")
+    lblX2.Caption = UniText("M\u1ED1c X2:")
+    lblY2.Caption = UniText("Gi\u00E1 tr\u1ECB Y2:")
+    fraQuery.Caption = UniText(" Gi\u00E1 tr\u1ECB c\u1EA7n tra c\u1EE9u & \u00D4 \u0111\u1EB7t k\u1EBFt qu\u1EA3 ")
+    lblValX.Caption = UniText("M\u1ED1c c\u1EA7n tra (X):")
+    lblDest.Caption = UniText("\u00D4 k\u1EBFt qu\u1EA3:")
+    chkAbsolute.Caption = UniText("C\u1ED1 \u0111\u1ECBnh \u00F4 ($)")
+    chkAttachTooltip.Caption = UniText("G\u1EAFn Tooltip \u00F4")
+    lblTooltipNote.Caption = UniText("(Khi ch\u1ECDn \u00F4 k\u1EBFt qu\u1EA3, h\u01B0\u1EDBng d\u1EABn c\u00FA ph\u00E1p s\u1EBD bay l\u01A1 l\u1EEDng ngay d\u01B0\u1EDBi \u00F4)")
+    fraPreview.Caption = UniText(" Xem tr\u01B0\u1EDBc k\u1EBFt qu\u1EA3 & C\u00F4ng th\u1EE9c sinh ra ")
+    lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: (Ch\u1EDD nh\u1EADp \u0111\u1EE7 th\u00F4ng tin...)")
+    btnSample.Caption = UniText("\uD83D\uDCCB T\u1EA1o B\u1EA3ng M\u1EABu")
+    btnInsertSyntax.Caption = UniText("\u270D Ch\u00E8n =Noisuy2b(")
+    btnInsert.Caption = UniText("\u26A1 CH\u00C8N C\u00D4NG TH\u1EE8C")
+    btnClose.Caption = UniText("\u0110\u00F3ng")
+    
+    If Not ActiveCell Is Nothing Then
+        txtDest.Text = ActiveCell.Address(False, False)
+    End If
+End Sub
+
+Private Sub UserForm_Activate()
+    On Error Resume Next
+    #If VBA7 Then
+        Dim hWndForm As LongPtr
+    #Else
+        Dim hWndForm As Long
+    #End If
+    hWndForm = FindWindowA("ThunderDFrame", "AVTool_NoiSuy1Chieu_Win")
+    If hWndForm <> 0 Then
+        SetWindowTextW hWndForm, StrPtr(UniText("AVTool - N\u1ED9i Suy 1 Chi\u1EC1u (Tuy\u1EBFn T\u00EDnh 2 \u0110i\u1EC3m)"))
+    End If
+End Sub
+
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+
+Private Sub btnPickX1_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 m\u1ED1c X1:"), UniText("Ch\u1ECDn M\u1ED1c X1"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        If chkAbsolute.Value Then
+            txtX1.Text = rng.Address(True, True)
+        Else
+            txtX1.Text = rng.Address(False, False)
+        End If
+        UpdatePreview
+    End If
+End Sub
+
+Private Sub btnPickY1_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 gi\u00E1 tr\u1ECB Y1:"), UniText("Ch\u1ECDn Gi\u00E1 Tr\u1ECB Y1"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        If chkAbsolute.Value Then
+            txtY1.Text = rng.Address(True, True)
+        Else
+            txtY1.Text = rng.Address(False, False)
+        End If
+        UpdatePreview
+    End If
+End Sub
+
+Private Sub btnPickX2_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 m\u1ED1c X2:"), UniText("Ch\u1ECDn M\u1ED1c X2"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        If chkAbsolute.Value Then
+            txtX2.Text = rng.Address(True, True)
+        Else
+            txtX2.Text = rng.Address(False, False)
+        End If
+        UpdatePreview
+    End If
+End Sub
+
+Private Sub btnPickY2_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 gi\u00E1 tr\u1ECB Y2:"), UniText("Ch\u1ECDn Gi\u00E1 Tr\u1ECB Y2"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        If chkAbsolute.Value Then
+            txtY2.Text = rng.Address(True, True)
+        Else
+            txtY2.Text = rng.Address(False, False)
+        End If
+        UpdatePreview
+    End If
+End Sub
+
+Private Sub btnPickValX_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 gi\u00E1 tr\u1ECB c\u1EA7n tra X:"), UniText("Ch\u1ECDn \u00D4 M\u1ED1c X"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        If chkAbsolute.Value Then
+            txtValX.Text = rng.Address(True, True)
+        Else
+            txtValX.Text = rng.Address(False, False)
+        End If
+        UpdatePreview
+    End If
+End Sub
+
+Private Sub btnPickDest_Click()
+    Dim rng As Range
+    Me.Hide
+    On Error Resume Next
+    Set rng = Application.InputBox(UniText("Ch\u1ECDn \u00F4 \u0111\u1EB7t c\u00F4ng th\u1EE9c k\u1EBFt qu\u1EA3:"), UniText("Ch\u1ECDn \u00D4 K\u1EBFt Qu\u1EA3"), Type:=8)
+    On Error GoTo 0
+    Me.Show vbModeless
+    If Not rng Is Nothing Then
+        txtDest.Text = rng.Address(False, False)
+    End If
+End Sub
+
+Private Sub txtX1_Change(): UpdatePreview: End Sub
+Private Sub txtY1_Change(): UpdatePreview: End Sub
+Private Sub txtX2_Change(): UpdatePreview: End Sub
+Private Sub txtY2_Change(): UpdatePreview: End Sub
+Private Sub txtValX_Change(): UpdatePreview: End Sub
+
+Private Sub chkAbsolute_Click()
+    Dim rX1 As Range, rY1 As Range, rX2 As Range, rY2 As Range, rValX As Range
+    On Error Resume Next
+    Set rX1 = Range(txtX1.Text)
+    Set rY1 = Range(txtY1.Text)
+    Set rX2 = Range(txtX2.Text)
+    Set rY2 = Range(txtY2.Text)
+    Set rValX = Range(txtValX.Text)
+    If Not rX1 Is Nothing Then txtX1.Text = rX1.Address(chkAbsolute.Value, chkAbsolute.Value)
+    If Not rY1 Is Nothing Then txtY1.Text = rY1.Address(chkAbsolute.Value, chkAbsolute.Value)
+    If Not rX2 Is Nothing Then txtX2.Text = rX2.Address(chkAbsolute.Value, chkAbsolute.Value)
+    If Not rY2 Is Nothing Then txtY2.Text = rY2.Address(chkAbsolute.Value, chkAbsolute.Value)
+    If Not rValX Is Nothing Then txtValX.Text = rValX.Address(chkAbsolute.Value, chkAbsolute.Value)
+    UpdatePreview
+End Sub
+
+Private Sub UpdatePreview()
+    Dim sX1 As String, sY1 As String, sX2 As String, sY2 As String, sX As String
+    Dim vX1 As Double, vY1 As Double, vX2 As Double, vY2 As Double, vX As Double
+    Dim res As Double
+    
+    On Error Resume Next
+    sX1 = Trim(txtX1.Text)
+    sY1 = Trim(txtY1.Text)
+    sX2 = Trim(txtX2.Text)
+    sY2 = Trim(txtY2.Text)
+    sX = Trim(txtValX.Text)
+    
+    If Len(sX1) = 0 Or Len(sY1) = 0 Or Len(sX2) = 0 Or Len(sY2) = 0 Or Len(sX) = 0 Then
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3: (Ch\u1EDD nh\u1EADp \u0111\u1EE7 5 tham s\u1ED1)")
+        txtFormula.Text = "=Noisuy2b(" & IIf(Len(sX1) > 0, sX1, "X1") & ", " & IIf(Len(sY1) > 0, sY1, "Y1") & ", " & _
+                          IIf(Len(sX2) > 0, sX2, "X2") & ", " & IIf(Len(sY2) > 0, sY2, "Y2") & ", " & _
+                          IIf(Len(sX) > 0, sX, "X") & ")"
+        Exit Sub
+    End If
+    
+    txtFormula.Text = "=Noisuy2b(" & sX1 & ", " & sY1 & ", " & sX2 & ", " & sY2 & ", " & sX & ")"
+    
+    ' Tính thử
+    If IsNumeric(sX1) Then vX1 = CDbl(sX1) Else vX1 = Val(Replace(CStr(Range(sX1).Value), ",", "."))
+    If IsNumeric(sY1) Then vY1 = CDbl(sY1) Else vY1 = Val(Replace(CStr(Range(sY1).Value), ",", "."))
+    If IsNumeric(sX2) Then vX2 = CDbl(sX2) Else vX2 = Val(Replace(CStr(Range(sX2).Value), ",", "."))
+    If IsNumeric(sY2) Then vY2 = CDbl(sY2) Else vY2 = Val(Replace(CStr(Range(sY2).Value), ",", "."))
+    If IsNumeric(sX) Then vX = CDbl(sX) Else vX = Val(Replace(CStr(Range(sX).Value), ",", "."))
+    
+    If vX2 = vX1 Then
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3: \u274C M\u1ED1c X1 v\u00E0 X2 tr\u00F9ng nhau!")
+    Else
+        res = Noisuy2b(vX1, vY1, vX2, vY2, vX)
+        lblPreview.Caption = UniText("K\u1EBFt qu\u1EA3 xem tr\u01B0\u1EDBc: Y = " & Format(res, "#,##0.0000"))
+    End If
+End Sub
+
+Private Sub btnInsert_Click()
+    Dim destRng As Range
+    On Error Resume Next
+    If Len(Trim(txtFormula.Text)) = 0 Then
+        MsgBoxUni "Vui l\u00F2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7 c\u00E1c th\u00F4ng s\u1ED1 tr\u01B0\u1EDBc khi ch\u00E8n!", vbExclamation, "AVTool"
+        Exit Sub
+    End If
+    
+    If Len(Trim(txtDest.Text)) > 0 Then
+        Set destRng = Range(txtDest.Text)
+    Else
+        Set destRng = ActiveCell
+    End If
+    
+    If destRng Is Nothing Then
+        MsgBoxUni "Ch\u01B0a ch\u1ECDn \u00F4 \u0111\u1EB7t k\u1EBFt qu\u1EA3!", vbExclamation, "AVTool"
+        Exit Sub
+    End If
+    
+    InsertNoiSuyToActiveWorkbook showMsg:=False
+    destRng.Formula = txtFormula.Text
+    If chkAttachTooltip.Value Then
+        AttachTooltipNoisuy2b destRng
+    End If
+    destRng.Select
+    
+    MsgBoxUni "\u0110\u00C3 CH\u00C8N C\u00D4NG TH\u1EE8C V\u00C0O \u00D4 " & destRng.Address(False, False) & " TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
+              "C\u00F4ng th\u1EE9c: " & txtFormula.Text & vbCrLf & _
+              IIf(chkAttachTooltip.Value, "\u2713 \u0110\u00E3 g\u1EAFn Tooltip h\u01B0\u1EDBng d\u1EABn l\u01A1 l\u1EEDng d\u01B0\u1EDBi \u00F4!", ""), vbInformation, "AVTool"
+End Sub
+
+Private Sub btnInsertSyntax_Click()
+    Dim destRng As Range
+    On Error Resume Next
+    If Len(Trim(txtDest.Text)) > 0 Then
+        Set destRng = Range(txtDest.Text)
+    Else
+        Set destRng = ActiveCell
+    End If
+    
+    If destRng Is Nothing Then
+        MsgBoxUni "Ch\u01B0a ch\u1ECDn \u00F4 \u0111\u1EB7t k\u1EBFt qu\u1EA3!", vbExclamation, "AVTool"
+        Exit Sub
+    End If
+    
+    InsertNoiSuyToActiveWorkbook showMsg:=False
+    destRng.Value = "=Noisuy2b("
+    If chkAttachTooltip.Value Then
+        AttachTooltipNoisuy2b destRng
+    End If
+    destRng.Select
+    
+    MsgBoxUni "\u0110\u00C3 CH\u00C8N C\u00DA PH\u00C1P '=Noisuy2b(' V\u00C0O \u00D4 " & destRng.Address(False, False) & "!" & vbCrLf & vbCrLf & _
+              "\u2713 \u0110\u00E3 g\u1EAFn Tooltip h\u01B0\u1EDBng d\u1EABn l\u01A1 l\u1EEDng ngay d\u01B0\u1EDBi \u00F4 t\u00EDnh khi click ch\u1ECDn \u00F4.", vbInformation, "AVTool"
 End Sub
 
 Private Sub btnSample_Click()
@@ -1839,7 +2244,7 @@ try {{
     # 5. Add UserForm frmNoiSuyMatran
     $form5 = $wb.VBProject.VBComponents.Add(3)
     $form5.Name = "frmNoiSuyMatran"
-    $form5.Properties.Item("Caption").Value = "AVTool - Noi Suy Ma Tran 2 Chieu (2D Bilinear)"
+    $form5.Properties.Item("Caption").Value = "AVTool_NoiSuyMatran_Win"
     $form5.Properties.Item("Width").Value = 460
     $form5.Properties.Item("Height").Value = 435
 
@@ -1950,7 +2355,7 @@ try {{
     # 6. Add UserForm frmNoiSuyDay
     $form6 = $wb.VBProject.VBComponents.Add(3)
     $form6.Name = "frmNoiSuyDay"
-    $form6.Properties.Item("Caption").Value = "AVTool - Noi Suy Day So 1 Chieu (1D Linear)"
+    $form6.Properties.Item("Caption").Value = "AVTool_NoiSuyDay_Win"
     $form6.Properties.Item("Width").Value = 460
     $form6.Properties.Item("Height").Value = 400
 
@@ -2042,6 +2447,110 @@ try {{
 '@
     $form6.CodeModule.AddFromString($fcode6)
 
+    # 7. Add UserForm frmNoiSuy1Chieu
+    $form7 = $wb.VBProject.VBComponents.Add(3)
+    $form7.Name = "frmNoiSuy1Chieu"
+    $form7.Properties.Item("Caption").Value = "AVTool_NoiSuy1Chieu_Win"
+    $form7.Properties.Item("Width").Value = 460
+    $form7.Properties.Item("Height").Value = 405
+
+    $h1C = $form7.Designer.Controls.Add("Forms.Label.1", "lblHeader")
+    $h1C.Caption = "NOI SUY 1 CHIEU (TUYEN TINH 2 DIEM KEP)"
+    $h1C.Left = 16; $h1C.Top = 8; $h1C.Width = 425; $h1C.Height = 18
+
+    $s1C = $form7.Designer.Controls.Add("Forms.Label.1", "lblSub")
+    $s1C.Caption = "Cong thuc =Noisuy2b(X1, Y1, X2, Y2, X). Tu dong tinh & gan tooltip huong dan"
+    $s1C.Left = 16; $s1C.Top = 26; $s1C.Width = 425; $s1C.Height = 16
+
+    # Khung 2 diem moc
+    $frPts7 = $form7.Designer.Controls.Add("Forms.Frame.1", "fraPoints")
+    $frPts7.Caption = " Thiet lap 2 diem moc can kep (Diem 1 & Diem 2) "
+    $frPts7.Left = 14; $frPts7.Top = 46; $frPts7.Width = 422; $frPts7.Height = 78
+
+    $lbX1 = $frPts7.Controls.Add("Forms.Label.1", "lblX1")
+    $lbX1.Caption = "Moc X1:"; $lbX1.Left = 10; $lbX1.Top = 18; $lbX1.Width = 52; $lbX1.Height = 16
+    $txX1 = $frPts7.Controls.Add("Forms.TextBox.1", "txtX1")
+    $txX1.Left = 64; $txX1.Top = 15; $txX1.Width = 95; $txX1.Height = 20
+    $btX1 = $frPts7.Controls.Add("Forms.CommandButton.1", "btnPickX1")
+    $btX1.Caption = "..."; $btX1.Left = 161; $btX1.Top = 15; $btX1.Width = 26; $btX1.Height = 20
+
+    $lbY1 = $frPts7.Controls.Add("Forms.Label.1", "lblY1")
+    $lbY1.Caption = "Gia tri Y1:"; $lbY1.Left = 200; $lbY1.Top = 18; $lbY1.Width = 65; $lbY1.Height = 16
+    $txY1 = $frPts7.Controls.Add("Forms.TextBox.1", "txtY1")
+    $txY1.Left = 268; $txY1.Top = 15; $txY1.Width = 110; $txY1.Height = 20
+    $btY1 = $frPts7.Controls.Add("Forms.CommandButton.1", "btnPickY1")
+    $btY1.Caption = "..."; $btY1.Left = 380; $btY1.Top = 15; $btY1.Width = 26; $btY1.Height = 20
+
+    $lbX2 = $frPts7.Controls.Add("Forms.Label.1", "lblX2")
+    $lbX2.Caption = "Moc X2:"; $lbX2.Left = 10; $lbX2.Top = 45; $lbX2.Width = 52; $lbX2.Height = 16
+    $txX2 = $frPts7.Controls.Add("Forms.TextBox.1", "txtX2")
+    $txX2.Left = 64; $txX2.Top = 42; $txX2.Width = 95; $txX2.Height = 20
+    $btX2 = $frPts7.Controls.Add("Forms.CommandButton.1", "btnPickX2")
+    $btX2.Caption = "..."; $btX2.Left = 161; $btX2.Top = 42; $btX2.Width = 26; $btX2.Height = 20
+
+    $lbY2 = $frPts7.Controls.Add("Forms.Label.1", "lblY2")
+    $lbY2.Caption = "Gia tri Y2:"; $lbY2.Left = 200; $lbY2.Top = 45; $lbY2.Width = 65; $lbY2.Height = 16
+    $txY2 = $frPts7.Controls.Add("Forms.TextBox.1", "txtY2")
+    $txY2.Left = 268; $txY2.Top = 42; $txY2.Width = 110; $txY2.Height = 20
+    $btY2 = $frPts7.Controls.Add("Forms.CommandButton.1", "btnPickY2")
+    $btY2.Caption = "..."; $btY2.Left = 380; $btY2.Top = 42; $btY2.Width = 26; $btY2.Height = 20
+
+    # Khung tra cuu & ket qua
+    $frQ7 = $form7.Designer.Controls.Add("Forms.Frame.1", "fraQuery")
+    $frQ7.Caption = " Gia tri can tra cuu & O dat ket qua "
+    $frQ7.Left = 14; $frQ7.Top = 128; $frQ7.Width = 422; $frQ7.Height = 88
+
+    $lbVx7 = $frQ7.Controls.Add("Forms.Label.1", "lblValX")
+    $lbVx7.Caption = "Moc can tra (X):"; $lbVx7.Left = 10; $lbVx7.Top = 16; $lbVx7.Width = 105; $lbVx7.Height = 16
+    $txVx7 = $frQ7.Controls.Add("Forms.TextBox.1", "txtValX")
+    $txVx7.Left = 118; $txVx7.Top = 14; $txVx7.Width = 120; $txVx7.Height = 20
+    $btVx7 = $frQ7.Controls.Add("Forms.CommandButton.1", "btnPickValX")
+    $btVx7.Caption = "..."; $btVx7.Left = 242; $btVx7.Top = 14; $btVx7.Width = 26; $btVx7.Height = 20
+    $ckAbs7 = $frQ7.Controls.Add("Forms.CheckBox.1", "chkAbsolute")
+    $ckAbs7.Caption = "Co dinh o ($)"; $ckAbs7.Left = 285; $ckAbs7.Top = 15; $ckAbs7.Width = 125; $ckAbs7.Height = 18; $ckAbs7.Value = $true
+
+    $lbDst7 = $frQ7.Controls.Add("Forms.Label.1", "lblDest")
+    $lbDst7.Caption = "O dat ket qua:"; $lbDst7.Left = 10; $lbDst7.Top = 42; $lbDst7.Width = 105; $lbDst7.Height = 16
+    $txDst7 = $frQ7.Controls.Add("Forms.TextBox.1", "txtDest")
+    $txDst7.Left = 118; $txDst7.Top = 40; $txDst7.Width = 120; $txDst7.Height = 20
+    $btDst7 = $frQ7.Controls.Add("Forms.CommandButton.1", "btnPickDest")
+    $btDst7.Caption = "..."; $btDst7.Left = 242; $btDst7.Top = 40; $btDst7.Width = 26; $btDst7.Height = 20
+    $ckTip7 = $frQ7.Controls.Add("Forms.CheckBox.1", "chkAttachTooltip")
+    $ckTip7.Caption = "Gan Tooltip o"; $ckTip7.Left = 285; $ckTip7.Top = 41; $ckTip7.Width = 125; $ckTip7.Height = 18; $ckTip7.Value = $true
+
+    $lbTipNote7 = $frQ7.Controls.Add("Forms.Label.1", "lblTooltipNote")
+    $lbTipNote7.Caption = "(Tooltip se bay lo lung duoi o khi click chon)"; $lbTipNote7.Left = 10; $lbTipNote7.Top = 64; $lbTipNote7.Width = 400; $lbTipNote7.Height = 16
+
+    # Khung xem truoc
+    $frPv7 = $form7.Designer.Controls.Add("Forms.Frame.1", "fraPreview")
+    $frPv7.Caption = " Xem truoc ket qua & Cong thuc sinh ra "
+    $frPv7.Left = 14; $frPv7.Top = 220; $frPv7.Width = 422; $frPv7.Height = 80
+
+    $lbPv7 = $frPv7.Controls.Add("Forms.Label.1", "lblPreview")
+    $lbPv7.Caption = "Ket qua xem truoc: (Cho nhap du thong tin...)"; $lbPv7.Left = 10; $lbPv7.Top = 14; $lbPv7.Width = 400; $lbPv7.Height = 16
+
+    $txFm7 = $frPv7.Controls.Add("Forms.TextBox.1", "txtFormula")
+    $txFm7.Left = 10; $txFm7.Top = 30; $txFm7.Width = 402; $txFm7.Height = 42
+    $txFm7.MultiLine = $true; $txFm7.Locked = $true; $txFm7.BorderStyle = 1
+
+    # Cac nut bam duoi cung
+    $btSmp7 = $form7.Designer.Controls.Add("Forms.CommandButton.1", "btnSample")
+    $btSmp7.Caption = "Tao Bang Mau"; $btSmp7.Left = 14; $btSmp7.Top = 308; $btSmp7.Width = 100; $btSmp7.Height = 30
+
+    $btSyn7 = $form7.Designer.Controls.Add("Forms.CommandButton.1", "btnInsertSyntax")
+    $btSyn7.Caption = "Chen =Noisuy2b("; $btSyn7.Left = 118; $btSyn7.Top = 308; $btSyn7.Width = 115; $btSyn7.Height = 30
+
+    $btIns7 = $form7.Designer.Controls.Add("Forms.CommandButton.1", "btnInsert")
+    $btIns7.Caption = "CHEN CONG THUC"; $btIns7.Left = 237; $btIns7.Top = 308; $btIns7.Width = 125; $btIns7.Height = 30; $btIns7.Default = $true
+
+    $btCls7 = $form7.Designer.Controls.Add("Forms.CommandButton.1", "btnClose")
+    $btCls7.Caption = "Dong"; $btCls7.Left = 366; $btCls7.Top = 308; $btCls7.Width = 70; $btCls7.Height = 30; $btCls7.Cancel = $true
+
+    $fcode7 = @'
+{code_frmNoiSuy1Chieu}
+'@
+    $form7.CodeModule.AddFromString($fcode7)
+
     if (Test-Path '{temp_xlam}') {{ Remove-Item '{temp_xlam}' }}
     $wb.SaveAs('{temp_xlam}', 55)
     $wb.Close($false)
@@ -2072,30 +2581,30 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         <group id="grpAVTool" label="Đổi Font Tiếng Việt">
           <button id="btnOpenForm" label="Đổi Font Tiếng Việt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
+        <group id="grpDValue" label="Dự Toán Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
           <button id="btnFixDValue" label="Sửa Lỗi DValue (#NAME?)" size="large" imageMso="FormulaEvaluate" onAction="Ribbon_OnAction"/>
         </group>
-                <group id="grpNoiSuy" label="Nội Suy Bảng Tra">
-          <button id="btnNoiSuyMatran" label="Nội Suy Ma Trận 2D" size="large" imageMso="MatrixTemplate" onAction="Ribbon_OnAction"/>
-          <button id="btnNoiSuyDay" label="Nội Suy Dãy 1D" size="large" imageMso="ChartScatterLines" onAction="Ribbon_OnAction"/>
-          <button id="btnTaoBangMau" label="Tạo Bảng Tra Mẫu (1D &amp; 2D)" size="normal" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
-          <button id="btnHuongDanNoiSuy" label="Hướng Dẫn Cú Pháp (=Noisuy2b...)" size="normal" imageMso="Help" onAction="Ribbon_OnAction"/>
+        <group id="grpNoiSuy" label="Nội Suy Bảng Tra">
+          <button id="btnNoiSuyMatran" label="Nội Suy Ma Trận 2D" size="large" imageMso="PivotTableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnNoiSuyDay" label="Nội Suy Dãy 1D" size="large" imageMso="AutoSum" onAction="Ribbon_OnAction"/>
+          <button id="btnNoiSuy1Chieu" label="Nội Suy 1 Chiều" size="large" imageMso="EquationProfessional" onAction="Ribbon_OnAction"/>
+          <button id="btnTaoBangMau" label="Tạo Bảng Tra Mẫu (Cả 3 Loại)" size="normal" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnHuongDanNoiSuy" label="Hướng Dẫn Cú Pháp" size="normal" imageMso="Help" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
-          <button id="btnUnhideRows" label="Mở Dòng Ẩn &amp; Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnUnhideRows" label="Mở Dòng Ẩn Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="Hệ Thống">
-          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
         </group>
-      </tab>
-    </tabs>
-  </ribbon>
-</customUI>"""
+      </tabs>
+    </ribbon>
+  </customUI>"""
 
 ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
   <ribbon>
@@ -2104,30 +2613,30 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         <group id="grpAVTool" label="Đổi Font Tiếng Việt">
           <button id="btnOpenForm" label="Đổi Font Tiếng Việt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
         </group>
-        <group id="grpDValue" label="Dự Toán &amp; Khối Lượng">
+        <group id="grpDValue" label="Dự Toán Khối Lượng">
           <button id="btnInsertDValue" label="Chèn DValue Vào File" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
           <button id="btnFixDValue" label="Sửa Lỗi DValue (#NAME?)" size="large" imageMso="FormulaEvaluate" onAction="Ribbon_OnAction"/>
         </group>
-                <group id="grpNoiSuy" label="Nội Suy Bảng Tra">
-          <button id="btnNoiSuyMatran" label="Nội Suy Ma Trận 2D" size="large" imageMso="MatrixTemplate" onAction="Ribbon_OnAction"/>
-          <button id="btnNoiSuyDay" label="Nội Suy Dãy 1D" size="large" imageMso="ChartScatterLines" onAction="Ribbon_OnAction"/>
-          <button id="btnTaoBangMau" label="Tạo Bảng Tra Mẫu (1D &amp; 2D)" size="normal" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
-          <button id="btnHuongDanNoiSuy" label="Hướng Dẫn Cú Pháp (=Noisuy2b...)" size="normal" imageMso="Help" onAction="Ribbon_OnAction"/>
+        <group id="grpNoiSuy" label="Nội Suy Bảng Tra">
+          <button id="btnNoiSuyMatran" label="Nội Suy Ma Trận 2D" size="large" imageMso="PivotTableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnNoiSuyDay" label="Nội Suy Dãy 1D" size="large" imageMso="AutoSum" onAction="Ribbon_OnAction"/>
+          <button id="btnNoiSuy1Chieu" label="Nội Suy 1 Chiều" size="large" imageMso="EquationProfessional" onAction="Ribbon_OnAction"/>
+          <button id="btnTaoBangMau" label="Tạo Bảng Tra Mẫu (Cả 3 Loại)" size="normal" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnHuongDanNoiSuy" label="Hướng Dẫn Cú Pháp" size="normal" imageMso="Help" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
-          <button id="btnUnhideRows" label="Mở Dòng Ẩn &amp; Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnUnhideRows" label="Mở Dòng Ẩn Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="Hệ Thống">
-          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="FileUpdate" onAction="Ribbon_OnAction"/>
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
         </group>
-      </tab>
-    </tabs>
-  </ribbon>
-</customUI>"""
+      </tabs>
+    </ribbon>
+  </customUI>"""
 
 for attempt in range(15):
     subprocess.run(["powershell", "-Command", "Stop-Process -Name 'EXCEL' -Force -ErrorAction SilentlyContinue"])

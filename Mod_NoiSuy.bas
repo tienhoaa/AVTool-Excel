@@ -1,19 +1,23 @@
 Option Explicit
 
 '========================================================================================
-' AVTOOL - BO CONG CU NOI SUY BANG TRA CHUYEN NGHIEP (MA TRAN 2D & DAY SO 1D)
+' AVTOOL - BO CONG CU NOI SUY BANG TRA CHUYEN NGHIEP (MA TRAN 2D, DAY SO, NOI SUY 1 CHIEU)
 '
-' Bao gom 3 ham noi suy chinh:
+' Bao gom 3 loai noi suy chinh:
 '   1. NoisuyMatran(Xk, Yk, GT, Xu, Yu): Noi suy ma tran 2 chieu (Bilinear Interpolation)
-'   2. NoisuyDay(Xk, Yk, Xu): Noi suy 1 chieu theo day so (Linear Interpolation)
-'   3. Noisuy2b(Xs1, Ys1, Xs2, Ys2, Xs): Noi suy tuyen tinh giua 2 diem co so
-'   4. Dt(d): Tinh dien tich tiet dien cot thep tron (m2) - Giu nguyen de tuong thich file cu
+'   2. NoisuyDay(Xk, Yk, Xu): Noi suy theo day so 1 chieu (Linear Interpolation)
+'   3. Noisuy2b(Xs1, Ys1, Xs2, Ys2, Xs): Noi suy tuyen tinh 1 chieu giua 2 diem
+'   4. Dt(d): Tinh dien tich tiet dien cot thep tron (m2) - Giu nguyen de tuong thich
 '========================================================================================
 
 #If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+    Private Declare PtrSafe Function SetWindowTextW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpString As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function FindWindowA Lib "user32" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+    Private Declare Function SetWindowTextW Lib "user32" (ByVal hwnd As Long, ByVal lpString As LongPtr) As Long
 #End If
 
 Public Function UniText(ByVal s As String) As String
@@ -32,8 +36,21 @@ Public Function MsgBoxUni(ByVal prompt As String, Optional ByVal buttons As Long
     MsgBoxUni = MessageBoxW(0, StrPtr(UniText(prompt)), StrPtr(UniText(title)), buttons)
 End Function
 
+Public Sub SetFormTitleUnicode(ByVal formCaption As String, ByVal unicodeTitle As String)
+    #If VBA7 Then
+        Dim hWndForm As LongPtr
+    #Else
+        Dim hWndForm As Long
+    #End If
+    On Error Resume Next
+    hWndForm = FindWindowA("ThunderDFrame", formCaption)
+    If hWndForm <> 0 Then
+        SetWindowTextW hWndForm, StrPtr(UniText(unicodeTitle))
+    End If
+End Sub
+
 ' -----------------------------------------------------------------------------
-' 1. HAM NOI SUY TUYEN TINH 2 DIEM (Xs1, Ys1) VA (Xs2, Ys2)
+' 1. HAM NOI SUY TUYEN TINH 1 CHIEU 2 DIEM: (Xs1, Ys1) VA (Xs2, Ys2)
 '    Dang ky huong dan tham so day du trong Excel (Tooltip fx)
 ' -----------------------------------------------------------------------------
 Public Function Noisuy2b(ByVal Xs1 As Double, ByVal Ys1 As Double, ByVal Xs2 As Double, ByVal Ys2 As Double, ByVal Xs As Double) As Double
@@ -240,7 +257,6 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
     Dim Timthay As Boolean
     Dim cell As Range
     Dim dblXu As Double, dblYu As Double
-    Dim sVal As String
     
     On Error GoTo LoiMatran
     
@@ -317,7 +333,7 @@ Public Function NoisuyMatran(ByVal Xk As Range, ByVal Yk As Range, ByVal GT As R
         Next j
     Next i
     
-    ' Gioi han bien an toan de tranh loi ngoai khoang
+    ' Gioi han bien an toan
     If dblXu < X(1) Then dblXu = X(1)
     If dblXu > X(Ncot) Then dblXu = X(Ncot)
     If dblYu < Y(1) Then dblYu = Y(1)
@@ -363,8 +379,28 @@ Public Function Name(ByVal a As Range) As String
     End If
 End Function
 
+' -----------------------------------------------------------------------------
+' 7. GAN TOOLTIP HUONG DAN VAO O KET QUA KHI CHON HOAC DAT CHUOT VAO O
+' -----------------------------------------------------------------------------
+Public Sub AttachTooltipNoisuy2b(ByVal rng As Range)
+    On Error Resume Next
+    With rng.Validation
+        .Delete
+        .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertInformation, Operator:=xlBetween, Formula1:="=TRUE"
+        .IgnoreBlank = True
+        .InCellDropdown = True
+        .InputTitle = "Noisuy2b(X1, Y1, X2, Y2, X)"
+        .InputMessage = UniText("H\u00E0m n\u1ED9i suy tuy\u1EBFn t\u00EDnh 1 chi\u1EC1u gi\u1EEFa 2 \u0111i\u1EC3m:" & vbCrLf & _
+                                "\u2022 X1, Y1: T\u1ECDad\u1ED9 m\u1ED1c d\u01B0\u1EDBi (M\u1ED1c 1)" & vbCrLf & _
+                                "\u2022 X2, Y2: T\u1ECDad\u1ED9 m\u1ED1c tr\u00EAn (M\u1ED1c 2)" & vbCrLf & _
+                                "\u2022 X: Gi\u00E1 tr\u1ECB c\u1EA7n tra c\u1EE9u")
+        .ShowInput = True
+        .ShowError = False
+    End With
+End Sub
+
 ' =============================================================================
-' 7. DIEU KHIEN HIEN THI 2 FORM CHUYEN DUNG (MODELess DE THAO TAC TREN EXCEL)
+' 8. DIEU KHIEN HIEN THI 3 FORM CHUYEN DUNG (MODELess DE THAO TAC TREN EXCEL)
 ' =============================================================================
 Public Sub ShowNoiSuyMatran()
     On Error Resume Next
@@ -384,19 +420,28 @@ Public Sub ShowNoiSuyDay()
     End If
 End Sub
 
+Public Sub ShowNoiSuy1Chieu()
+    On Error Resume Next
+    If Val(Application.Version) >= 12 Then
+        frmNoiSuy1Chieu.Show vbModeless
+    Else
+        frmNoiSuy1Chieu.Show
+    End If
+End Sub
+
 ' =============================================================================
-' 8. HUONG DAN CU PHAP NOI SUY CHO NGUOI DUNG
+' 9. HUONG DAN CU PHAP NOI SUY CHO NGUOI DUNG
 ' =============================================================================
 Public Sub ShowHuongDanNoiSuy()
     Dim s As String
     s = "=== HUONG DAN SU DUNG CAC HAM NOI SUY (AVTOOL) ===" & vbCrLf & vbCrLf & _
-        "1. NOI SUY TUYEN TINH 2 DIEM:" & vbCrLf & _
+        "1. NOI SUY 1 CHIEU (2 DIEM KEP):" & vbCrLf & _
         "   =Noisuy2b(X1, Y1, X2, Y2, X)" & vbCrLf & _
-        "   - X1, Y1 : Toa do moc duoi" & vbCrLf & _
-        "   - X2, Y2 : Toa do moc tren" & vbCrLf & _
+        "   - X1, Y1 : Toa do moc duoi (Diem 1)" & vbCrLf & _
+        "   - X2, Y2 : Toa do moc tren (Diem 2)" & vbCrLf & _
         "   - X      : Gia tri can tra cuu" & vbCrLf & _
-        "   * Meo nho: Khi go '=Noisuy2b(' roi an to hop phim Ctrl + Shift + A, Excel se tu dien san ten 5 tham so vao o!" & vbCrLf & _
-        "   * Hoac bam nut fx tren thanh cong thuc de xem huong dan chi tiet tung o." & vbCrLf & vbCrLf & _
+        "   * Meo nho: Khi go '=Noisuy2b(' roi an Ctrl + Shift + A, Excel se tu dien san ten 5 tham so vao o!" & vbCrLf & _
+        "   * Hoac mo Form 'Noi Suy 1 Chieu' de tu dong gan Tooltip huong dan bay lo lung duoi o tinh!" & vbCrLf & vbCrLf & _
         "2. NOI SUY DAY SO 1 CHIEU:" & vbCrLf & _
         "   =NoisuyDay(Day_X, Day_Y, X_can_tra)" & vbCrLf & _
         "   - Tu dong sap xep day X tang dan va hoan vi Y tuong ung." & vbCrLf & _
@@ -407,13 +452,13 @@ Public Sub ShowHuongDanNoiSuy()
         "   - Cot_Y  : Vung cot moc doc ben trai" & vbCrLf & _
         "   - MaTran_GT : Khoi du lieu ben trong" & vbCrLf & _
         "   - Xu, Yu : Gia tri can tra theo 2 truc" & vbCrLf & vbCrLf & _
-        "* Tat ca cac ham deu tu dong duoc nhung san vao file khi ban su dung Form hoac tao bang mau, giup file mang sang may khac hoan toan khong bi loi #NAME?."
+        "* Tat ca cac ham deu tu dong duoc nhung san vao file khi ban su dung Form hoac tao bang mau."
         
     MsgBoxUni s, vbInformation, "Huong Dan Cu Phap Noi Suy"
 End Sub
 
 ' =============================================================================
-' 9. DANG KY MO TA HAM VA THAM SO TRONG EXCEL (TOOLTIPS / FX DIALOG)
+' 10. DANG KY MO TA HAM VA THAM SO TRONG EXCEL (TOOLTIPS / FX DIALOG)
 ' =============================================================================
 Public Sub RegisterMacroDescriptions()
     On Error Resume Next
@@ -450,7 +495,7 @@ Public Sub RegisterMacroDescriptions()
 End Sub
 
 ' =============================================================================
-' 10. TU DONG NHUNG MOD_NOISUY VAO FILE DANG MO (TRANH LOI #NAME? KHI GUI FILE)
+' 11. TU DONG NHUNG MOD_NOISUY VAO FILE DANG MO (TRANH LOI #NAME? KHI GUI FILE)
 ' =============================================================================
 Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean = True) As Boolean
     Dim targetWb As Workbook
@@ -495,10 +540,9 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
     lineCount = srcComp.CodeModule.CountOfLines
     noiSuyCode = srcComp.CodeModule.Lines(1, lineCount)
     
-    ' Kiem tra xem ham NoisuyMatran da ton tai trong bat ky module nao chua
     Set existingComp = Nothing
     For Each comp In vbProj.VBComponents
-        If comp.Type = 1 Then ' vbext_ct_StdModule
+        If comp.Type = 1 Then
             lineCount = comp.CodeModule.CountOfLines
             If lineCount > 0 Then
                 codeText = comp.CodeModule.Lines(1, lineCount)
@@ -537,7 +581,7 @@ Public Function InsertNoiSuyToActiveWorkbook(Optional ByVal showMsg As Boolean =
 End Function
 
 ' =============================================================================
-' 11. TAO BANG TRA MAU MINH HOA CHO NGUOI MOI (1D VA 2D TREN CUNG 1 SHEET TIEN LOI)
+' 12. TAO BANG TRA MAU MINH HOA CHO CA 3 LOAI (MA TRAN 2D, DAY SO 1D, 2 DIEM)
 ' =============================================================================
 Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     Dim wb As Workbook, ws As Worksheet
@@ -564,11 +608,11 @@ Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     Set ws = wb.Worksheets.Add(After:=wb.ActiveSheet)
     ws.Name = sheetName
     
-    ' PHAN 1: BANG TRA MA TRAN 2 CHIEU (BEN TRAI)
+    ' --- PHAN 1: BANG TRA MA TRAN 2 CHIEU (HAM =NoisuyMatran) ---
     ws.Range("B2:G2").Merge
     ws.Range("B2").Value = "1. BANG TRA MA TRAN 2 CHIEU (HAM =NoisuyMatran)"
     ws.Range("B2").Font.Bold = True
-    ws.Range("B2").Font.Size = 12
+    ws.Range("B2").Font.Size = 11
     ws.Range("B2").Font.Color = RGB(0, 51, 102)
     
     ws.Range("B3").Value = "Moc Y \ Moc X ->"
@@ -624,11 +668,11 @@ Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     ws.Range("C14").Interior.Color = RGB(210, 245, 210)
     ws.Range("C14").NumberFormat = "0.0000"
     
-    ' PHAN 2: BANG TRA DAY SO 1 CHIEU (BEN PHAI)
+    ' --- PHAN 2: BANG TRA DAY SO 1 CHIEU (HAM =NoisuyDay) ---
     ws.Range("I2:L2").Merge
     ws.Range("I2").Value = "2. BANG TRA DAY SO 1 CHIEU (HAM =NoisuyDay)"
     ws.Range("I2").Font.Bold = True
-    ws.Range("I2").Font.Size = 12
+    ws.Range("I2").Font.Size = 11
     ws.Range("I2").Font.Color = RGB(0, 51, 102)
     
     ws.Range("I3").Value = "Moc X"
@@ -655,18 +699,56 @@ Public Sub CreateSampleTableAll(Optional ByVal showMsg As Boolean = True)
     ws.Range("J13").Interior.Color = RGB(210, 245, 210)
     ws.Range("J13").NumberFormat = "0.00"
     
-    ' PHAN 3: NOI SUY 2 DIEM (=Noisuy2b)
-    ws.Range("I15:L15").Merge
-    ws.Range("I15").Value = "3. NOI SUY 2 DIEM NHANH: =Noisuy2b(X1, Y1, X2, Y2, X)"
-    ws.Range("I15").Font.Bold = True
-    ws.Range("I15").Font.Color = RGB(150, 50, 0)
-    ws.Range("I16").Value = "Vi du: =Noisuy2b(10, 100, 20, 200, 15) -> Ket qua: 150"
+    ' --- PHAN 3: NOI SUY 1 CHIEU 2 DIEM (HAM =Noisuy2b) CO TOOLTIP HUONG DAN ---
+    ws.Range("B17:G17").Merge
+    ws.Range("B17").Value = "3. NOI SUY 1 CHIEU (2 DIEM KEP - HAM =Noisuy2b)"
+    ws.Range("B17").Font.Bold = True
+    ws.Range("B17").Font.Size = 11
+    ws.Range("B17").Font.Color = RGB(150, 50, 0)
+    
+    ws.Range("B18").Value = "Moc duoi (X1, Y1):"
+    ws.Range("C18").Value = 10
+    ws.Range("D18").Value = 100
+    ws.Range("C18:D18").Interior.Color = RGB(240, 240, 240)
+    ws.Range("C18:D18").HorizontalAlignment = xlCenter
+    
+    ws.Range("B19").Value = "Moc tren (X2, Y2):"
+    ws.Range("C19").Value = 20
+    ws.Range("D19").Value = 200
+    ws.Range("C19:D19").Interior.Color = RGB(240, 240, 240)
+    ws.Range("C19:D19").HorizontalAlignment = xlCenter
+    
+    ws.Range("B20").Value = "Gia tri can tra (X):"
+    ws.Range("C20").Value = 15
+    ws.Range("C20").Interior.Color = RGB(255, 255, 200)
+    ws.Range("C20").HorizontalAlignment = xlCenter
+    
+    ws.Range("B21").Value = "KET QUA NOI SUY:"
+    ws.Range("B21").Font.Bold = True
+    ws.Range("C21").Formula = "=Noisuy2b(C18, D18, C19, D19, C20)"
+    ws.Range("C21").Font.Bold = True
+    ws.Range("C21").Font.Size = 11
+    ws.Range("C21").Font.Color = RGB(0, 100, 0)
+    ws.Range("C21").Interior.Color = RGB(210, 245, 210)
+    ws.Range("C21").NumberFormat = "0.00"
+    
+    ' Gan Tooltip huong dan bay lo lung ngay duoi o ket qua C21!
+    AttachTooltipNoisuy2b ws.Range("C21")
+    
+    ws.Range("E18:G21").Merge
+    ws.Range("E18").Value = "Click chon o C21 de xem Tooltip huong dan bay ngay duoi o tinh!" & vbCrLf & _
+                           "Cu phap: =Noisuy2b(X1, Y1, X2, Y2, X)"
+    ws.Range("E18").Font.Italic = True
+    ws.Range("E18").Font.Size = 8.5
+    ws.Range("E18").Font.Color = RGB(100, 100, 100)
     
     ws.Columns("B:L").AutoFit
     InsertNoiSuyToActiveWorkbook showMsg:=False
     
     If showMsg Then
-        MsgBoxUni "\u0110\u00C3 T\u1EA0O B\u1EA2NG TRA M\u1EAEU T\u1EA0I SHEET '" & sheetName & "' TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
-                  "Sheet \u0111\u00E3 c\u00F3 s\u1EB5n c\u1EA3 B\u1EA3ng Ma tr\u1EADn 2D v\u00E0 D\u00E3y s\u1ED1 1D \u0111\u1EC3 b\u1EA1n tham kh\u1EA3o v\u00E0 s\u1EED d\u1EE5ng ngay.", vbInformation, "AVTool"
+        MsgBoxUni "\u0110\u00C3 T\u1EA0O B\u1EA2NG TRA M\u1EAEU CHO C\u1EA2 3 LO\u1EA0I T\u1EA0I SHEET '" & sheetName & "' TH\u00C0NH C\u00D4NG!" & vbCrLf & vbCrLf & _
+                  "1. B\u1EA3ng Ma tr\u1EADn 2D (=NoisuyMatran)" & vbCrLf & _
+                  "2. B\u1EA3ng D\u00E3y s\u1ED1 1D (=NoisuyDay)" & vbCrLf & _
+                  "3. B\u1EA3ng N\u1ED9i suy 1 chi\u1EC1u 2 \u0111i\u1EC3m (=Noisuy2b) c\u00F3 g\u1EAFn Tooltip h\u01B0\u1EDBng d\u1EABn d\u01B0\u1EDBi \u00F4!", vbInformation, "AVTool"
     End If
 End Sub

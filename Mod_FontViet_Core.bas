@@ -731,6 +731,7 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         ' Noi suy & Bang tra
         Case "btnNoiSuyMatran": ShowNoiSuyMatran
         Case "btnNoiSuyDay": ShowNoiSuyDay
+        Case "btnNoiSuy1Chieu": ShowNoiSuy1Chieu
         Case "btnTaoBangMau": CreateSampleTableAll True
         Case "btnHuongDanNoiSuy": ShowHuongDanNoiSuy
         
