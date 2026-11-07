@@ -2,10 +2,10 @@
 <IntelliSense xmlns="http://schemas.excel-dna.net/intellisense/1.0">
   <FunctionInfo>
     <Function Name="Noisuy2b" Description="Hàm nội suy tuyến tính 1 chiều giữa 2 điểm kẹp (Xs1,Ys1) và (Xs2,Ys2)">
-      <Argument Name="Xs1" Description="Tọa độ X mốc dưới (Điểm 1)" />
-      <Argument Name="Ys1" Description="Giá trị Y mốc dưới (Điểm 1)" />
-      <Argument Name="Xs2" Description="Tọa độ X mốc trên (Điểm 2)" />
-      <Argument Name="Ys2" Description="Giá trị Y mốc trên (Điểm 2)" />
+      <Argument Name="Xs1" Description="Tọa độ X mốc dưới (điểm 1)" />
+      <Argument Name="Ys1" Description="Giá trị Y mốc dưới (điểm 1)" />
+      <Argument Name="Xs2" Description="Tọa độ X mốc trên (điểm 2)" />
+      <Argument Name="Ys2" Description="Giá trị Y mốc trên (điểm 2)" />
       <Argument Name="Xs" Description="Giá trị mốc X cần tra cứu (nội suy)" />
     </Function>
     <Function Name="NoisuyDay" Description="Hàm nội suy tuyến tính dãy số 1 chiều theo hàng hoặc cột (tự động sắp xếp)">
@@ -13,7 +13,7 @@
       <Argument Name="Yk" Description="Dãy giá trị tương ứng (Hàng hoặc cột giá trị Y)" />
       <Argument Name="Xu" Description="Giá trị mốc X cần tra cứu" />
     </Function>
-    <Function Name="NoisuyMatran" Description="Hàm nội suy ma trận 2 chiều song tuyến tính (Bilinear) bảng 2 trục X và Y">
+    <Function Name="NoisuyMatran" Description="Hàm nội suy ma trận 2 chiều song tuyến tính (Bilinear) bằng 2 trục X và Y">
       <Argument Name="Xk" Description="Hàng mốc trục ngang (X)" />
       <Argument Name="Yk" Description="Cột mốc trục dọc (Y)" />
       <Argument Name="GT" Description="Vùng ma trận số liệu tương ứng" />
@@ -22,6 +22,55 @@
     </Function>
     <Function Name="Dt" Description="Tính diện tích cốt thép tròn (mm -> m2): Dt = pi*d^2 / 4000000">
       <Argument Name="d" Description="Đường kính thanh thép phi (mm)" />
+    </Function>
+    <Function Name="TraBeta" Description="Tra hệ số hiệu chỉnh ứng suất kéo uốn Beta theo Bảng 3.6 TCCS 38:2022 và 22TCN 211-06">
+      <Argument Name="H_D" Description="Tỷ số chiều dày H trên bán kính bánh xe D (H/D)" />
+    </Function>
+    <Function Name="TraEch" Description="Tra tỷ số Ech/Etb theo Toán đồ Kogan Hình 3.1 TCCS 38:2022 và 22TCN 211-06">
+      <Argument Name="H_D" Description="Tỷ số chiều dày tương đương H/D" />
+      <Argument Name="E0_Etb" Description="Tỷ số mô-đun đàn hồi E0/Etb" />
+    </Function>
+    <Function Name="TraKcd" Description="Tra hệ số cường độ yêu cầu Kcd theo độ tin cậy và cấp đường">
+      <Argument Name="DoTinCay" Description="Độ tin cậy thiết kế (ví dụ: 0.95 hoặc 0.98)" />
+      <Argument Name="CapDuong" Description="Cấp mặt đường (1: Cấp cao A1, 2: Cấp cao A2, 3: Cấp thấp B1)" />
+    </Function>
+    <Function Name="TinhEyc" Description="Tính mô-đun đàn hồi yêu cầu Eyc (MPa) theo số trục xe tích lũy Ne">
+      <Argument Name="Ne" Description="Số trục xe tiêu chuẩn tích lũy trong thời hạn thiết kế (trục)" />
+      <Argument Name="CapDuong" Description="Cấp mặt đường (1: Cấp cao A1, 2: Cấp cao A2, 3: Cấp thấp B1)" />
+    </Function>
+    <Function Name="TraEyc" Description="Tra cứu mô-đun đàn hồi yêu cầu Eyc (MPa) theo số trục xe tích lũy Ne">
+      <Argument Name="Ne" Description="Số trục xe tiêu chuẩn tích lũy trong thời hạn thiết kế (trục)" />
+      <Argument Name="CapDuong" Description="Cấp mặt đường (1: Cấp cao A1, 2: Cấp cao A2, 3: Cấp thấp B1)" />
+    </Function>
+    <Function Name="TraTaxHD2" Description="Tra ứng suất cắt hoạt động Tax/p với H/D = 2 theo 22TCN 211-06 / TCCS 38:2022">
+      <Argument Name="H1_D" Description="Tỷ số chiều dày lớp 1 trên bán kính bánh xe (H1/D)" />
+      <Argument Name="E1_Echm" Description="Tỷ số mô đun đàn hồi E1/Ech" />
+    </Function>
+    <Function Name="TraTaxHD4" Description="Tra ứng suất cắt hoạt động Tax/p với H/D = 4 theo 22TCN 211-06 / TCCS 38:2022">
+      <Argument Name="H1_D" Description="Tỷ số chiều dày lớp 1 trên bán kính bánh xe (H1/D)" />
+      <Argument Name="E1_Echm" Description="Tỷ số mô đun đàn hồi E1/Ech" />
+    </Function>
+    <Function Name="TraTav" Description="Tra ứng suất trượt do trọng lượng bản thân Tav theo 22TCN 211-06">
+      <Argument Name="H1_D" Description="Tỷ số chiều dày H1/D" />
+      <Argument Name="E1_Echm" Description="Tỷ số mô đun đàn hồi E1/Ech" />
+    </Function>
+    <Function Name="TinhUS_tangmat" Description="Tính ứng suất kéo uốn đáy tầng mặt bê tông nhựa">
+      <Argument Name="H1_D" Description="Tỷ số chiều dày tầng mặt H1/D" />
+      <Argument Name="E1_Echm" Description="Tỷ số mô đun đàn hồi E1/Ech" />
+    </Function>
+    <Function Name="TinhUS_tangmong" Description="Tính ứng suất kéo uốn đáy tầng móng gia cố xi măng / vô cơ">
+      <Argument Name="Hm_D" Description="Tỷ số chiều dày tầng móng Hm/D" />
+      <Argument Name="Em_E0" Description="Tỷ số mô đun đàn hồi Em/E0" />
+    </Function>
+    <Function Name="tlookup" Description="Nội suy song tuyến tính 2D trên bảng toán đồ Kogan (Hàng 1 là X, cột 1 là Y)">
+      <Argument Name="TableRange" Description="Vùng bảng toán đồ (ví dụ: toandoH31)" />
+      <Argument Name="Xu" Description="Giá trị mốc X cần tra (tỷ số E0/Etb)" />
+      <Argument Name="Yu" Description="Giá trị mốc Y cần tra (tỷ số H/D)" />
+    </Function>
+    <Function Name="interpolate" Description="Nội suy tuyến tính dãy số 1 chiều trong bảng tra">
+      <Argument Name="col_idx" Description="Chỉ số cột cần lấy giá trị nội suy trong bảng" />
+      <Argument Name="x_val" Description="Giá trị mốc X cần tra" />
+      <Argument Name="data_range" Description="Vùng bảng tra dữ liệu" />
     </Function>
   </FunctionInfo>
 </IntelliSense>

@@ -48,6 +48,12 @@ if exist "%~dp0ExcelDna.IntelliSense64.xll" (
 if exist "%~dp0Cap_Nhat_Online.bat" (
     copy /y "%~dp0Cap_Nhat_Online.bat" "%TARGET_DIR%\Cap_Nhat_Online.bat" >nul
 )
+if exist "%~dp0TN_KCAD_Mau_LamMoi_TCCS38.xlsx" (
+    copy /y "%~dp0TN_KCAD_Mau_LamMoi_TCCS38.xlsx" "%TARGET_DIR%\TN_KCAD_Mau_LamMoi_TCCS38.xlsx" >nul
+)
+if exist "%~dp0TN_KCAD_Mau_TangCuong_MDCu.xlsx" (
+    copy /y "%~dp0TN_KCAD_Mau_TangCuong_MDCu.xlsx" "%TARGET_DIR%\TN_KCAD_Mau_TangCuong_MDCu.xlsx" >nul
+)
 
 :: 5. Bo chan bao mat cua Windows (Unblock)
 powershell -Command "Get-ChildItem -Path '%TARGET_DIR%' | Unblock-File -ErrorAction SilentlyContinue"

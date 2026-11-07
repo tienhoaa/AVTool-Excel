@@ -735,6 +735,20 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         Case "btnTaoBangMau": CreateSampleTableAll True
         Case "btnHuongDanNoiSuy": ShowHuongDanNoiSuy
         
+        ' KCAD - Ket Cau Ao Duong
+        Case "btnKCAD_LamMoi": TaoBangKCAD_LamMoi
+        Case "btnKCAD_TangCuong": TaoBangKCAD_TangCuong
+        Case "btnKCAD_TinhEyc": ChenCongThuc_TinhEyc
+        Case "btnKCAD_TraBeta": ChenCongThuc_TraBeta
+        Case "btnKCAD_TraEch": ChenCongThuc_TraEch
+        Case "btnKCAD_TraKcd": ChenCongThuc_TraKcd
+        Case "btnKCAD_TraTaxHD2": ChenCongThuc_TraTaxHD2
+        Case "btnKCAD_TraTaxHD4": ChenCongThuc_TraTaxHD4
+        Case "btnKCAD_TraTav": ChenCongThuc_TraTav
+        Case "btnKCAD_USTangMat": ChenCongThuc_USTangMat
+        Case "btnKCAD_USTangMong": ChenCongThuc_USTangMong
+        Case "btnKCAD_HuongDan": ShowHuongDanKCAD
+        
         ' Scope
         Case "btnScopeSelection": gProcessScope = 1: MsgBox "Da dat pham vi: Vung dang chon (Selection)", vbInformation, "AVTool"
         Case "btnScopeSheet": gProcessScope = 2: MsgBox "Da dat pham vi: Sheet hien tai", vbInformation, "AVTool"
@@ -778,6 +792,7 @@ Public Sub Auto_Open()
     InitSettings
     LoadIntelliSenseXLL
     RegisterMacroDescriptions
+    RegisterKCADMacroDescriptions
     Application.OnTime Now + TimeValue("00:00:03"), "CheckForUpdatesStartup"
 End Sub
 
@@ -952,7 +967,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.4.4"
+    currentVer = "2.5.0"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled

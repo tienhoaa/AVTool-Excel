@@ -107,10 +107,16 @@ zip_local = os.path.join(workspace, "AVTool_Pro_2026.zip")
 
 files_to_pack = [
     "TN_FontViet_Pro_2026.xlam",
+    "TN_FontViet_Pro_2026.intellisense.xml",
+    "ExcelDna.IntelliSense.xll",
+    "ExcelDna.IntelliSense64.xll",
+    "TN_KCAD_Mau_LamMoi_TCCS38.xlsx",
+    "TN_KCAD_Mau_TangCuong_MDCu.xlsx",
     "Cai_Dat_AVTool.bat",
     "Cap_Nhat_Online.bat",
     "Go_Cai_Dat_AVTool.bat",
-    "Huong_Dan_Su_Dung.txt"
+    "Huong_Dan_Su_Dung.txt",
+    "HUONG_DAN_TONG_HOP_LENH.md"
 ]
 
 for zpath in [zip_desktop, zip_local]:

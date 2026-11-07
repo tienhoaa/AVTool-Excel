@@ -1,3 +1,6 @@
 ~$*
 *.tmp
 temp_*
+backup_stable_kcad/
+__pycache__/
+tpl_*

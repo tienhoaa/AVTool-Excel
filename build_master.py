@@ -5,6 +5,12 @@ bas_core = os.path.join(workspace, "Mod_FontViet_Core.bas")
 bas_dval = os.path.join(workspace, "Mod_DValue.bas")
 bas_print = os.path.join(workspace, "Mod_BatchPrint.bas")
 bas_noisuy = os.path.join(workspace, "Mod_NoiSuy.bas")
+bas_kcad = os.path.join(workspace, "Mod_KCAD.bas")
+tpl_lammoi_wb = os.path.join(workspace, "tpl_lammoi_single.xlsx")
+tpl_tangcuong_wb = os.path.join(workspace, "tpl_tangcuong_single.xlsx")
+
+# Copy template files to workspace with ascii names to guarantee 100% path safety in PowerShell
+# Su dung 2 file single template doc lap da duoc toi uu (tpl_lammoi_single.xlsx & tpl_tangcuong_single.xlsx)
 temp_xlam = os.path.join(workspace, "temp_addon.xlam")
 final_xlam = os.path.join(workspace, "TN_FontViet_Pro_2026.xlam")
 
@@ -1564,6 +1570,49 @@ try {{
     $wsIntel.Range("C5").Value = ""
     $wsIntel.Range("D5").Value = "d";   $wsIntel.Range("E5").Value = "Duong kinh thanh thep (mm)"
 
+    # 5. TraBeta
+    $wsIntel.Range("A6").Value = "TraBeta"
+    $wsIntel.Range("B6").Value = "Tra he so hieu chinh Beta theo Bang 3.6 muc 3.4.4 TCCS 38:2022 va 22TCN 211-06"
+    $wsIntel.Range("C6").Value = ""
+    $wsIntel.Range("D6").Value = "H_D"; $wsIntel.Range("E6").Value = "Ty so chieu day tong voi duong kinh banh xe (H/D)"
+
+    # 6. TraEch
+    $wsIntel.Range("A7").Value = "TraEch"
+    $wsIntel.Range("B7").Value = "Tra ty so Ech/Etb theo Toan do Kogan Hinh 3.1 muc 3.4.4 TCCS 38:2022 va 22TCN 211-06"
+    $wsIntel.Range("C7").Value = ""
+    $wsIntel.Range("D7").Value = "H_D";    $wsIntel.Range("E7").Value = "Ty le H/D"
+    $wsIntel.Range("F7").Value = "E0_Etb"; $wsIntel.Range("G7").Value = "Ty so mo-dun E0/Etb"
+
+    # 7. TraKcd
+    $wsIntel.Range("A8").Value = "TraKcd"
+    $wsIntel.Range("B8").Value = "Tra he so cuong do yeu cau Kcd theo do tin cay thiet ke va cap duong"
+    $wsIntel.Range("C8").Value = ""
+    $wsIntel.Range("D8").Value = "DoTinCay"; $wsIntel.Range("E8").Value = "Do tin cay P (0.85, 0.90, 0.95, 0.98)"
+    $wsIntel.Range("F8").Value = "CapDuong"; $wsIntel.Range("G8").Value = "Cap hang duong (Cao toc, I, II, III...)"
+
+    # 8. TinhEyc
+    $wsIntel.Range("A9").Value = "TinhEyc"
+    $wsIntel.Range("B9").Value = "Tinh mo-dun dan hoi yeu cau Eyc (Mpa) theo so truc xe tich luy Ne"
+    $wsIntel.Range("C9").Value = ""
+    $wsIntel.Range("D9").Value = "Ne";       $wsIntel.Range("E9").Value = "So truc xe tieu chuan tich luy trong thoi han thiet ke"
+    $wsIntel.Range("F9").Value = "CapDuong"; $wsIntel.Range("G9").Value = "Cap hang duong hoac tieu chuan (TCCS38/22TCN211)"
+
+    # 9. tlookup
+    $wsIntel.Range("A10").Value = "tlookup"
+    $wsIntel.Range("B10").Value = "Ham tra cuu song tuyen tinh 2 chieu (bilinear) tren toan do Kogan H3.1"
+    $wsIntel.Range("C10").Value = ""
+    $wsIntel.Range("D10").Value = "TableRange"; $wsIntel.Range("E10").Value = "Vung bang toan do Kogan (hang 1 la X, cot 1 la Y)"
+    $wsIntel.Range("F10").Value = "Xu";         $wsIntel.Range("G10").Value = "Gia tri moc H/D can tra"
+    $wsIntel.Range("H10").Value = "Yu";         $wsIntel.Range("I10").Value = "Gia tri moc E0/E1 can tra"
+
+    # 10. interpolate
+    $wsIntel.Range("A11").Value = "interpolate"
+    $wsIntel.Range("B11").Value = "Ham tra cuu noi suy tuyen tinh tren bang tra du lieu"
+    $wsIntel.Range("C11").Value = ""
+    $wsIntel.Range("D11").Value = "col_idx";    $wsIntel.Range("E11").Value = "So thu tu cot can lay gia tri"
+    $wsIntel.Range("F11").Value = "x_val";      $wsIntel.Range("G11").Value = "Gia tri moc can tra"
+    $wsIntel.Range("H11").Value = "data_range"; $wsIntel.Range("I11").Value = "Vung du lieu bang tra"
+
     # An sheet _IntelliSense_
     $wsIntel.Visible = 2
     
@@ -1590,6 +1639,41 @@ try {{
     $modNoiSuy.Name = "Mod_NoiSuy"
     $codeNoiSuy = [System.IO.File]::ReadAllText('{bas_noisuy}', [System.Text.Encoding]::ASCII)
     $modNoiSuy.CodeModule.AddFromString($codeNoiSuy)
+
+    # 3c. Add Mod_KCAD
+    $modKcad = $wb.VBProject.VBComponents.Add(1)
+    $modKcad.Name = "Mod_KCAD"
+    $codeKcad = [System.IO.File]::ReadAllText('{bas_kcad}', [System.Text.Encoding]::UTF8)
+    $modKcad.CodeModule.AddFromString($codeKcad)
+
+    # Ham sao chep va doi ten Sheet tuyet doi chinh xac bang cach do tim sheet moi
+    function Copy-And-Rename($srcSheet, $targetWb, $newName) {{
+        $existing = @()
+        foreach ($s in $targetWb.Sheets) {{ $existing += $s.Name }}
+        $srcSheet.Copy($targetWb.Sheets.Item(1))
+        foreach ($s in $targetWb.Sheets) {{
+            if ($existing -notcontains $s.Name) {{
+                if ($newName -ne '') {{
+                    $s.Name = $newName
+                }}
+                $s.Visible = 2 # xlSheetVeryHidden
+                return $s
+            }}
+        }}
+    }}
+
+    # 3d. Sao chep cac Sheet phoi mau KCAD don sheet tu file single template (Zero External Links)
+    $wb1 = $excel.Workbooks.Open('{tpl_lammoi_wb}', $false, $true)
+    $sMoi = Copy-And-Rename $wb1.Worksheets.Item(1) $wb 'Tpl_KCAD_LamMoi'
+    $wb1.Close($false)
+    
+    $wb2 = $excel.Workbooks.Open('{tpl_tangcuong_wb}', $false, $true)
+    $sTC  = Copy-And-Rename $wb2.Worksheets.Item(1) $wb 'Tpl_KCAD_TangCuong'
+    $wb2.Close($false)
+    
+    # Xoa bo cac local sheet names tren tung sheet de tranh xung dot Name Conflict
+    foreach ($nm in $sTC.Names) {{ try {{ $nm.Delete() }} catch {{}} }}
+    foreach ($nm in $sMoi.Names) {{ try {{ $nm.Delete() }} catch {{}} }}
     
     # 4. Add UserForm frmAVTool
     $form1 = $wb.VBProject.VBComponents.Add(3)
@@ -2242,7 +2326,31 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="Hệ Thống">
-          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="Synchronize" onAction="Ribbon_OnAction"/>
+        </group>
+      </tab>
+                  <tab id="tabKCAD" label="KCAD">
+        <group id="grpKCAD_Mau" label="Mẫu Bảng Tính Chuẩn">
+          <button id="btnKCAD_LamMoi" label="MĐ Làm Mới&#10;(TCCS 38:2022)" size="large" imageMso="SheetInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TangCuong" label="Tăng Cường&#10;Mặt Đường Cũ" size="large" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_CuongDo" label="Kiểm Toán Cường Độ">
+          <button id="btnKCAD_TinhEyc" label="Tính Eyc&#10;(Mô đun Y/C)" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraBeta" label="Tra Beta&#10;(Hệ số Beta)" size="large" imageMso="EquationProfessional" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraEch" label="Tra Ech/E0&#10;(Toán đồ Kogan)" size="large" imageMso="PivotTableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraKcd" label="Hệ Số Kcđ&#10;(Cường độ Y/C)" size="large" imageMso="PropertySheet" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_ChongTruot" label="Kiểm Toán Chống Trượt">
+          <button id="btnKCAD_TraTaxHD2" label="Tra Tax/p&#10;(H/D = 2)" size="large" imageMso="AutoSum" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraTaxHD4" label="Tra Tax/p&#10;(H/D = 4)" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraTav" label="Tra Tav&#10;(Trọng lượng)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_KeoUon" label="Kiểm Toán Kéo Uốn">
+          <button id="btnKCAD_USTangMat" label="Ứng Suất&#10;Tầng Mặt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_USTangMong" label="Ứng Suất&#10;Tầng Móng" size="large" imageMso="TableDesign" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_TroGiup" label="Trợ Giúp">
+          <button id="btnKCAD_HuongDan" label="Hướng Dẫn&#10;Cú Pháp KCAD" size="large" imageMso="Help" onAction="Ribbon_OnAction"/>
         </group>
       </tab>
     </tabs>
@@ -2273,7 +2381,31 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpUpdate" label="Hệ Thống">
-          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="ServerRefresh" onAction="Ribbon_OnAction"/>
+          <button id="btnCheckUpdate" label="Cập Nhật Bản Mới" size="large" imageMso="Synchronize" onAction="Ribbon_OnAction"/>
+        </group>
+      </tab>
+                  <tab id="tabKCAD" label="KCAD">
+        <group id="grpKCAD_Mau" label="Mẫu Bảng Tính Chuẩn">
+          <button id="btnKCAD_LamMoi" label="MĐ Làm Mới&#10;(TCCS 38:2022)" size="large" imageMso="SheetInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TangCuong" label="Tăng Cường&#10;Mặt Đường Cũ" size="large" imageMso="TableInsert" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_CuongDo" label="Kiểm Toán Cường Độ">
+          <button id="btnKCAD_TinhEyc" label="Tính Eyc&#10;(Mô đun Y/C)" size="large" imageMso="Calculator" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraBeta" label="Tra Beta&#10;(Hệ số Beta)" size="large" imageMso="EquationProfessional" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraEch" label="Tra Ech/E0&#10;(Toán đồ Kogan)" size="large" imageMso="PivotTableInsert" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraKcd" label="Hệ Số Kcđ&#10;(Cường độ Y/C)" size="large" imageMso="PropertySheet" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_ChongTruot" label="Kiểm Toán Chống Trượt">
+          <button id="btnKCAD_TraTaxHD2" label="Tra Tax/p&#10;(H/D = 2)" size="large" imageMso="AutoSum" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraTaxHD4" label="Tra Tax/p&#10;(H/D = 4)" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_TraTav" label="Tra Tav&#10;(Trọng lượng)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_KeoUon" label="Kiểm Toán Kéo Uốn">
+          <button id="btnKCAD_USTangMat" label="Ứng Suất&#10;Tầng Mặt" size="large" imageMso="FontDialog" onAction="Ribbon_OnAction"/>
+          <button id="btnKCAD_USTangMong" label="Ứng Suất&#10;Tầng Móng" size="large" imageMso="TableDesign" onAction="Ribbon_OnAction"/>
+        </group>
+        <group id="grpKCAD_TroGiup" label="Trợ Giúp">
+          <button id="btnKCAD_HuongDan" label="Hướng Dẫn&#10;Cú Pháp KCAD" size="large" imageMso="Help" onAction="Ribbon_OnAction"/>
         </group>
       </tab>
     </tabs>
@@ -2326,3 +2458,13 @@ if os.path.exists(updater_bat):
 for tf in [temp_xlam, os.path.join(workspace, "make_master.ps1")]:
     if os.path.exists(tf):
         os.remove(tf)
+
+
+# Copy 2 file mau day du vao thu muc AddIns de mo duoc tren moi may
+addins_dir = os.path.expandvars(r"%APPDATA%\Microsoft\AddIns")
+for tpl_file in ["TN_KCAD_Mau_LamMoi_TCCS38.xlsx", "TN_KCAD_Mau_TangCuong_MDCu.xlsx"]:
+    src_p = os.path.join(workspace, tpl_file)
+    dst_p = os.path.join(addins_dir, tpl_file)
+    if os.path.exists(src_p):
+        shutil.copy2(src_p, dst_p)
+        print(f"Copied template {tpl_file} to AddIns folder.")

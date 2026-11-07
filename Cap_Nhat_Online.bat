@@ -19,6 +19,8 @@ curl.exe -L -s -o "%TEMP_FILE%" "%DOWNLOAD_URL%"
 curl.exe -L -s -o "%TARGET_DIR%\TN_FontViet_Pro_2026.intellisense.xml" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.intellisense.xml"
 curl.exe -L -s -o "%TARGET_DIR%\ExcelDna.IntelliSense.xll" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/ExcelDna.IntelliSense.xll"
 curl.exe -L -s -o "%TARGET_DIR%\ExcelDna.IntelliSense64.xll" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/ExcelDna.IntelliSense64.xll"
+curl.exe -L -s -o "%TARGET_DIR%\TN_KCAD_Mau_LamMoi_TCCS38.xlsx" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_KCAD_Mau_LamMoi_TCCS38.xlsx"
+curl.exe -L -s -o "%TARGET_DIR%\TN_KCAD_Mau_TangCuong_MDCu.xlsx" "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_KCAD_Mau_TangCuong_MDCu.xlsx"
 
 if not exist "%TEMP_FILE%" (
     echo.

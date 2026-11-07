@@ -435,16 +435,23 @@ Public Sub ShowNoiSuy1Chieu()
     ' 3. Xoa sach Data Validation vang cu tren o (neu co)
     curCell.Validation.Delete
     
-    ' 4. Active cua so Excel va danh lenh =Noisuy2b( vao o dang dat chuot
+    ' 4. Gan truc tiep cong thuc =Noisuy2b() vao o bang code VBA
+    '    (Khong dung SendKeys danh chu, chong triet de Unikey/EVKey Telex bien 'nois' thanh 'Nội')
+    curCell.Formula = "=Noisuy2b()"
+    curCell.Select
+    
+    ' 5. Active cua so Excel va dua con tro vao giua cap dau ngoac de hop thoai IntelliSense bung ra
     AppActivate Application.Caption
-    Application.OnTime Now, "DoTypeNoisuy2b"
+    Application.OnTime Now, "FocusInsideNoisuy2b"
+End Sub
+
+Public Sub FocusInsideNoisuy2b()
+    On Error Resume Next
+    Application.SendKeys "{F2}{LEFT}"
 End Sub
 
 Public Sub DoTypeNoisuy2b()
-    On Error Resume Next
-    If ActiveCell Is Nothing Then Exit Sub
-    ActiveCell.Select
-    Application.SendKeys "=Noisuy2b{(}"
+    FocusInsideNoisuy2b
 End Sub
 
 ' =============================================================================
@@ -452,27 +459,31 @@ End Sub
 ' =============================================================================
 Public Sub ShowHuongDanNoiSuy()
     Dim s As String
-    s = "=== HUONG DAN SU DUNG CAC HAM NOI SUY (AVTOOL) ===" & vbCrLf & vbCrLf & _
-        "1. NOI SUY 1 CHIEU (2 DIEM KEP):" & vbCrLf & _
-        "   =Noisuy2b(X1, Y1, X2, Y2, X)" & vbCrLf & _
-        "   - X1, Y1 : Toa do moc duoi (Diem 1)" & vbCrLf & _
-        "   - X2, Y2 : Toa do moc tren (Diem 2)" & vbCrLf & _
-        "   - X      : Gia tri can tra cuu" & vbCrLf & _
-        "   * Meo nho: Khi go '=Noisuy2b(' roi an Ctrl + Shift + A, Excel se tu dien san ten 5 tham so vao o!" & vbCrLf & _
-        "   * Hoac mo Form 'Noi Suy 1 Chieu' de tu dong gan Tooltip huong dan bay lo lung duoi o tinh!" & vbCrLf & vbCrLf & _
-        "2. NOI SUY DAY SO 1 CHIEU:" & vbCrLf & _
-        "   =NoisuyDay(Day_X, Day_Y, X_can_tra)" & vbCrLf & _
-        "   - Tu dong sap xep day X tang dan va hoan vi Y tuong ung." & vbCrLf & _
-        "   - Ho tro ca day cot doc hoac hang ngang." & vbCrLf & vbCrLf & _
-        "3. NOI SUY MA TRAN 2 CHIEU (BILINEAR):" & vbCrLf & _
-        "   =NoisuyMatran(Hang_X, Cot_Y, MaTran_GT, Xu, Yu)" & vbCrLf & _
-        "   - Hang_X : Vung hang moc ngang tren cung" & vbCrLf & _
-        "   - Cot_Y  : Vung cot moc doc ben trai" & vbCrLf & _
-        "   - MaTran_GT : Khoi du lieu ben trong" & vbCrLf & _
-        "   - Xu, Yu : Gia tri can tra theo 2 truc" & vbCrLf & vbCrLf & _
-        "* Tat ca cac ham deu tu dong duoc nhung san vao file khi ban su dung Form hoac tao bang mau."
-        
-    MsgBoxUni s, vbInformation, "Huong Dan Cu Phap Noi Suy"
+    s = "=== H\u01AF\u1EDANG D\u1EAAN C\u00C1C H\u00C0M N\u1ED8I SUY TO\u00C1N H\u1ECCC & K\u1EF8 THU\u1EACT ==="
+    s = s & vbCrLf & ""
+    s = s & vbCrLf & "1. N\u1ED8I SUY 1 CHI\u1EC0U (2 \u0110I\u1EC2M K\u1EB8P):"
+    s = s & vbCrLf & "   =Noisuy2b(X1, Y1, X2, Y2, X_can_tra)"
+    s = s & vbCrLf & "   - N\u1ED9i suy tuy\u1EBFn t\u00EDnh gi\u1EEFa 2 m\u1ED1c k\u1EB9p (X1, Y1) v\u00E0 (X2, Y2)."
+    s = s & vbCrLf & ""
+    s = s & vbCrLf & "2. N\u1ED8I SUY D\u00C3Y S\u1ED0 1 CHI\u1EC0U:"
+    s = s & vbCrLf & "   =NoisuyDay(Day_X, Day_Y, X_can_tra)"
+    s = s & vbCrLf & "   - T\u1EF1 \u0111\u1ED9ng s\u1EAFp x\u1EBFp d\u00E3y m\u1ED1c X v\u00E0 ho\u00E1n v\u1ECB d\u00E3y gi\u00E1 tr\u1ECB Y t\u01B0\u01A1ng \u1EE9ng."
+    s = s & vbCrLf & "   - H\u1ED7 tr\u1EE3 c\u1EA3 m\u1ED1c x\u1EBFp t\u0103ng d\u1EA7n ho\u1EB7c gi\u1EA3m d\u1EA7n, h\u00E0ng ngang ho\u1EB7c c\u1ED9t d\u1ECDc."
+    s = s & vbCrLf & ""
+    s = s & vbCrLf & "3. N\u1ED8I SUY MA TR\u1EACN 2 CHI\u1EC0U (SONG TUY\u1EBEN T\u00CDNH - BILINEAR):"
+    s = s & vbCrLf & "   =NoisuyMatran(Hang_X, Cot_Y, MaTran_GT, Xu, Yu)"
+    s = s & vbCrLf & "   - Hang_X : D\u00E3y m\u1ED1c tr\u1EE5c ho\u00E0nh (tr\u1EE5c ngang)."
+    s = s & vbCrLf & "   - Cot_Y  : D\u00E3y m\u1ED1c tr\u1EE5c tung (tr\u1EE5c d\u1ECDc)."
+    s = s & vbCrLf & "   - MaTran_GT : V\u00F9ng gi\u00E1 tr\u1ECB b\u00EAn trong b\u1EA3ng."
+    s = s & vbCrLf & "   - Xu, Yu : T\u1ECDa \u0111\u1ED9 \u0111i\u1EC3m c\u1EA7n tra n\u1ED9i suy."
+    s = s & vbCrLf & ""
+    s = s & vbCrLf & "4. H\u00C0M T\u00CDNH DI\u1EC6N T\u00CDCH TH\u00C9P (mm -> m2):"
+    s = s & vbCrLf & "   =Dt(d) : T\u00EDnh di\u1EC7n t\u00EDch ti\u1EBFt di\u1EC7n c\u1ED1t th\u00E9p tr\u00F2n \u0111\u01B0\u1EDDng k\u00EDnh phi d (mm) ra m2."
+    s = s & vbCrLf & ""
+    s = s & vbCrLf & "(*) M\u1EB8O S\u1EEC D\u1EE4NG:"
+    s = s & vbCrLf & "- B\u1EA5m n\u00FAt [T\u1EA1o B\u1EA3ng M\u1EABu] tr\u00EAn Ribbon \u0111\u1EC3 sinh s\u1EB5n sheet m\u1EABu n\u1ED9i suy tr\u1EF1c quan."
+    s = s & vbCrLf & "- IntelliSense t\u1EF1 \u0111\u1ED9ng hi\u1EC3n th\u1ECB m\u00F4 t\u1EA3 t\u1EEBng tham s\u1ED1 b\u1EB1ng ti\u1EBFng Vi\u1EC7t khi g\u00F5 c\u00F4ng th\u1EE9c."
+    MsgBoxUni s, vbInformation, "H\u01AF\u1EDANG D\u1EAAN C\u00C1C H\u00C0M N\u1ED8I SUY - AVTOOL"
 End Sub
 
 ' =============================================================================
