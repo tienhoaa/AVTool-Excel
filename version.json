@@ -1,7 +1,7 @@
 {
-  "version": "2.5.0",
-  "latest_version": "2.5.0",
-  "release_date": "2026-11-07",
-  "changelog": "- Tich hop tron bo Tab [KCAD] Thiet ke & Kiem toan Ao duong mem theo TCCS 38:2022/TCDBVN & 22 TCN 211-06\n- Bo sung 2 file mau bang tinh in A4 chuan du sheet (MD Lam Moi 4 sheet, Tang Cuong MD Cu 11 sheet)\n- Toi uu 9 ham tra cuu ao duong: TinhEyc, TraBeta, TraEch, TraKcd, TraTaxHD2, TraTaxHD4, TraTav, TinhUS_tangmat, TinhUS_tangmong\n- Cac nut tra cuu Ribbon tu dong chen lenh rong () tien dung, khong dien san so mau\n- Chuan hoa 100% he thong icon Ribbon Fluent UI sac net, bo sung icon Synchronize cho Cap Nhat Ban Moi\n- Bo sung tai lieu Huong dan tong hop toan bo lenh Ribbon & lenh an UDF tren o bang tinh tieng Viet Unicode co dau",
+  "version": "2.5.1",
+  "latest_version": "2.5.1",
+  "release_date": "2026-11-11",
+  "changelog": "- Bo sung tinh nang [Mo Khoa Macro] (Unblock File) truc tiep tren thanh Ribbon AVTool\n- Tu dong nhan dien va mo khoa ngay file dang mo (ke ca Protected View va Red Bar Security Risk) trong 0.3 giay ma khong can thao tac thu cong\n- Ho tro chon va mo khoa hang loat file tren may tinh\n- Ung dung truc tiep Win32 API DeleteFileW xoa sach luong Zone.Identifier tren file, khong can thiep Registry Windows",
   "download_url": "https://raw.githubusercontent.com/tienhoaa/AVTool-Excel/main/TN_FontViet_Pro_2026.xlam"
 }

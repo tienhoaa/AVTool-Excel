@@ -7,8 +7,10 @@ Option Explicit
 
 #If VBA7 Then
     Private Declare PtrSafe Function MessageBoxW Lib "user32" (ByVal hwnd As LongPtr, ByVal lpText As LongPtr, ByVal lpCaption As LongPtr, ByVal uType As Long) As Long
+    Private Declare PtrSafe Function DeleteFileW Lib "kernel32" (ByVal lpFileName As LongPtr) As Long
 #Else
     Private Declare Function MessageBoxW Lib "user32" (ByVal hwnd As Long, ByVal lpText As Long, ByVal lpCaption As Long, ByVal uType As Long) As Long
+    Private Declare Function DeleteFileW Lib "kernel32" (ByVal lpFileName As Long) As Long
 #End If
 
 Public gProtectFormula As Boolean
@@ -716,6 +718,143 @@ Public Sub ShowNumberSeparatorForm()
     End If
 End Sub
 
+' =============================================================================
+' TIEN ICH MO KHOA MACRO CHO FILE EXCEL (UNBLOCK MARK-OF-THE-WEB)
+' =============================================================================
+Private Function UnblockSingleFile(ByVal filePath As String) As Boolean
+    On Error Resume Next
+    Dim res As Long
+    
+    ' 1. Win32 DeleteFileW xoa stream Zone.Identifier truc tiep (0.001ms, khong cua so, khong can admin)
+    res = DeleteFileW(StrPtr(filePath & ":Zone.Identifier"))
+    If res <> 0 Then
+        UnblockSingleFile = True
+        Exit Function
+    End If
+    
+    ' 2. Fallback sang PowerShell Unblock-File
+    Dim psCmd As String
+    psCmd = "powershell.exe -NoProfile -WindowStyle Hidden -Command ""Unblock-File -LiteralPath '" & Replace(filePath, "'", "''") & "'"""
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    If Not wsh Is Nothing Then
+        wsh.Run psCmd, 0, True
+        UnblockSingleFile = True
+    End If
+End Function
+
+Public Sub UnblockMacroFile()
+    On Error GoTo ErrHandle
+    Dim fPath As String, fName As String
+    
+    ' 1. Kiem tra truong hop file dang mo o che do Protected View (Che do xem duoc bao ve)
+    On Error Resume Next
+    If Application.ProtectedViewWindows.Count > 0 Then
+        Dim pv As Object
+        Set pv = Application.ActiveProtectedViewWindow
+        If Not pv Is Nothing Then
+            fPath = pv.SourcePath
+            If Right$(fPath, 1) <> "\" Then fPath = fPath & "\"
+            fPath = fPath & pv.SourceName
+            fName = pv.SourceName
+            
+            Dim ansPV As VbMsgBoxResult
+            ansPV = MsgBoxUniCore("\u0042\u1EA1\u006E\u0020\u0063\u00F3\u0020\u006D\u0075\u1ED1\u006E\u0020\u004D\u1EDE\u0020\u004B\u0048\u00D3\u0041\u0020\u004D\u0041\u0043\u0052\u004F\u0020\u0063\u0068\u006F\u0020\u0066\u0069\u006C\u0065\u0020\u0111\u00E1\u006E\u0067\u0020\u006D\u1EDF\u0020\u006E\u00E0\u0079\u0020\u006B\u0068\u00F4\u006E\u0067\u003F" & vbCrLf & vbCrLf & _
+                                  "- \u0046\u0069\u006C\u0065\u003A\u0020" & fName & vbCrLf & vbCrLf & _
+                                  "\u0028\u0054\u006F\u006F\u006C\u0020\u0073\u1EBD\u0020\u0074\u1EF1\u0020\u0111\u1ED9\u006E\u0067\u0020\u0067\u1EE1\u0020\u0063\u1EDD\u0020\u0063\u0068\u1EB7\u006E\u0020\u0076\u00E0\u0020\u006E\u1EA1\u0070\u0020\u006C\u1EA1\u0069\u0020\u0063\u00F3\u0020\u004D\u0061\u0063\u0072\u006F\u0020\u006E\u0067\u0061\u0079\u0029", _
+                                  vbYesNo + vbQuestion, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u004D\u0061\u0063\u0072\u006F")
+            If ansPV <> vbYes Then Exit Sub
+            
+            pv.Close
+            UnblockSingleFile fPath
+            Application.ScreenUpdating = True
+            Workbooks.Open fPath
+            
+            MsgBoxUniCore "\u0110\u00C3\u0020\u004D\u1EDF\u0020\u004B\u0048\u00D3\u0041\u0020\u004D\u0041\u0043\u0052\u004F\u0020\u0054\u0048\u00C0\u004E\u0048\u0020\u0043\u00D4\u004E\u0047\u0021" & vbCrLf & vbCrLf & _
+                          "- \u0046\u0069\u006C\u0065\u003A\u0020" & fName & vbCrLf & _
+                          "- \u0054\u0072\u1EA1\u006E\u0067\u0020\u0074\u0068\u00E1\u0069\u003A\u0020\u0110\u00E3\u0020\u0067\u1EE1\u0020\u0063\u1EDD\u0020\u0063\u0068\u1EB7\u006E\u002E\u0020\u004D\u0061\u0063\u0072\u006F\u0020\u0111\u00E3\u0020\u0073\u1EB5\u006E\u0020\u0073\u00E0\u006E\u0067\u0020\u0063\u0068\u1EA1\u0079\u0021", _
+                          vbInformation, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u0054\u0068\u00E0\u006E\u0067\u0020\u0043\u00F4\u006E\u0067"
+            Exit Sub
+        End If
+    End If
+    
+    ' 2. Kiem tra truong hop file dang mo binh thuong (nhung bi thanh do chan Macro)
+    Dim activeWb As Workbook
+    Set activeWb = ActiveWorkbook
+    If Not activeWb Is Nothing Then
+        If Len(activeWb.Path) > 0 And activeWb.FullName <> ThisWorkbook.FullName Then
+            fPath = activeWb.FullName
+            fName = activeWb.Name
+            
+            Dim ansNorm As VbMsgBoxResult
+            ansNorm = MsgBoxUniCore("\u0042\u1EA1\u006E\u0020\u0063\u00F3\u0020\u006D\u0075\u1ED1\u006E\u0020\u004D\u1EDE\u0020\u004B\u0048\u00D3\u0041\u0020\u004D\u0041\u0043\u0052\u004F\u0020\u0063\u0068\u006F\u0020\u0066\u0069\u006C\u0065\u0020\u0111\u00E1\u006E\u0067\u0020\u006D\u1EDF\u0020\u006E\u00E0\u0079\u0020\u006B\u0068\u00F4\u006E\u0067\u003F" & vbCrLf & vbCrLf & _
+                                    "- \u0046\u0069\u006C\u0065\u003A\u0020" & fName & vbCrLf & vbCrLf & _
+                                    "\u0028\u0054\u006F\u006F\u006C\u0020\u0073\u1EBD\u0020\u0074\u1EF1\u0020\u0111\u1ED9\u006E\u0067\u0020\u0111\u00F3\u006E\u0067\u002C\u0020\u0067\u1EE1\u0020\u0063\u1EDD\u0020\u0063\u0068\u1EB7\u006E\u0020\u0076\u00E0\u0020\u006E\u1EA1\u0070\u0020\u006C\u1EA1\u0069\u0020\u0111\u1EC3\u0020\u0063\u0068\u1EA1\u0079\u0020\u004D\u0061\u0063\u0072\u006F\u0029", _
+                                    vbYesNo + vbQuestion, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u004D\u0061\u0063\u0072\u006F")
+            If ansNorm <> vbYes Then Exit Sub
+            
+            If Not activeWb.Saved Then
+                Dim saveAns As VbMsgBoxResult
+                saveAns = MsgBoxUniCore("\u0046\u0069\u006C\u0065\u0020\u0111\u00E1\u006E\u0067\u0020\u0063\u00F3\u0020\u0074\u0068\u0061\u0079\u0020\u0111\u1ED5\u0069\u0020\u0063\u0068\u01B0\u0061\u0020\u006C\u01B0\u0075\u002E\u0020\u0042\u1EA1\u006E\u0020\u0063\u00F3\u0020\u006D\u0075\u1ED1\u006E\u0020\u004C\u01AF\u0055\u0020\u0074\u0072\u01B0\u1EDB\u0063\u0020\u006B\u0068\u0069\u0020\u006E\u1EA1\u0070\u0020\u006C\u1EA1\u0069\u0020\u006B\u0068\u00F4\u006E\u0067\u003F", vbYesNoCancel + vbQuestion, "\u004C\u01B0\u0075\u0020\u0054\u0068\u0061\u0079\u0020\u0110\u1ED5\u0069")
+                If saveAns = vbCancel Then Exit Sub
+                If saveAns = vbYes Then activeWb.Save
+            End If
+            
+            activeWb.Close SaveChanges:=False
+            UnblockSingleFile fPath
+            Application.ScreenUpdating = True
+            Workbooks.Open fPath
+            
+            MsgBoxUniCore "\u0110\u00C3\u0020\u004D\u1EDF\u0020\u004B\u0048\u00D3\u0041\u0020\u004D\u0041\u0043\u0052\u004F\u0020\u0054\u0048\u00C0\u004E\u0048\u0020\u0043\u00D4\u004E\u0047\u0021" & vbCrLf & vbCrLf & _
+                          "- \u0046\u0069\u006C\u0065\u003A\u0020" & fName & vbCrLf & _
+                          "- \u0054\u0072\u1EA1\u006E\u0067\u0020\u0074\u0068\u00E1\u0069\u003A\u0020\u0110\u00E3\u0020\u0067\u1EE1\u0020\u0063\u1EDD\u0020\u0063\u0068\u1EB7\u006E\u0020\u0076\u00E0\u0020\u006E\u1EA1\u0070\u0020\u006C\u1EA1\u0069\u002E\u0020\u004D\u0061\u0063\u0072\u006F\u0020\u0111\u00E3\u0020\u0073\u1EB5\u006E\u0020\u0073\u00E0\u006E\u0067\u0020\u0063\u0068\u1EA1\u0079\u0021", _
+                          vbInformation, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u0054\u0068\u00E0\u006E\u0067\u0020\u0043\u00F4\u006E\u0067"
+            Exit Sub
+        End If
+    End If
+    
+    ' 3. Neu khong co file nao dang mo tren man hinh -> Hoi chon file tu may tinh
+    Dim vFiles As Variant
+    vFiles = Application.GetOpenFilename( _
+        "File Excel chua Macro (*.xlsm;*.xlsb;*.xla;*.xlam;*.xls;*.xlsx),*.xlsm;*.xlsb;*.xla;*.xlam;*.xls;*.xlsx", _
+        1, _
+        "Chon file Excel can mo khoa Macro (Unblock)", _
+        , _
+        True)
+        
+    If VarType(vFiles) = vbBoolean Then Exit Sub
+    
+    Dim i As Long, countSuccess As Long
+    countSuccess = 0
+    
+    For i = LBound(vFiles) To UBound(vFiles)
+        If UnblockSingleFile(CStr(vFiles(i))) Then
+            countSuccess = countSuccess + 1
+        End If
+    Next i
+    
+    If countSuccess = 1 Then
+        Dim openAns As VbMsgBoxResult
+        Dim singlePath As String
+        singlePath = CStr(vFiles(1))
+        
+        openAns = MsgBoxUniCore("\u0110\u00C3\u0020\u004D\u1EDF\u0020\u004B\u0048\u00D3\u0041\u0020\u004D\u0041\u0043\u0052\u004F\u0020\u0054\u0048\u00C0\u004E\u0048\u0020\u0043\u00D4\u004E\u0047\u0021" & vbCrLf & vbCrLf & _
+                                "- \u0046\u0069\u006C\u0065\u003A\u0020" & Dir$(singlePath) & vbCrLf & vbCrLf & _
+                                "\u0042\u1EA1\u006E\u0020\u0063\u00F3\u0020\u006D\u0075\u1ED1\u006E\u0020\u004D\u1EDE\u0020\u0046\u0049\u004C\u0045\u0020\u006E\u00E0\u0079\u0020\u006C\u00EA\u006E\u0020\u006E\u0067\u0061\u0079\u0020\u0062\u00E2\u0079\u0020\u0067\u0069\u1EDD\u0020\u006B\u0068\u00F4\u006E\u0067\u003F", vbYesNo + vbQuestion, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u0054\u0068\u00E0\u006E\u0067\u0020\u0043\u00F4\u006E\u0067")
+        If openAns = vbYes Then
+            Workbooks.Open singlePath
+        End If
+    ElseIf countSuccess > 1 Then
+        MsgBoxUniCore "\u0110\u00C3\u0020\u004D\u1EDF\u0020\u004B\u0048\u00D3\u0041\u0020\u0054\u0048\u00C0\u004E\u0048\u0020\u0043\u00D4\u004E\u0047\u0021" & vbCrLf & vbCrLf & _
+                      "- \u0110\u00E3\u0020\u0067\u1EE1\u0020\u0063\u1EDD\u0020\u0063\u0068\u1EB7\u006E\u0020\u004D\u0061\u0063\u0072\u006F\u0020\u0063\u0068\u006F\u0020" & countSuccess & "\u0020\u0066\u0069\u006C\u0065\u0020\u0111\u01B0\u1EE3\u0063\u0020\u0063\u0068\u1ECD\u006E\u002E" & vbCrLf & _
+                      "- \u0054\u1EEB\u0020\u0062\u00E2\u0079\u0020\u0067\u0069\u1EDD\u0020\u0062\u1EA1\u006E\u0020\u0063\u00F3\u0020\u0074\u0068\u1EC3\u0020\u006D\u1EDF\u0020\u0063\u00E1\u0063\u0020\u0066\u0069\u006C\u0065\u0020\u006E\u00E0\u0079\u0020\u006D\u00E0\u0020\u006B\u0068\u00F4\u006E\u0067\u0020\u0063\u00F2\u006E\u0020\u0062\u1ECB\u0020\u0063\u0068\u1EB7\u006E\u0020\u006E\u1EEF\u0061\u002E", vbInformation, "\u004D\u1EDF\u0020\u004B\u0068\u00F3\u0061\u0020\u0054\u0068\u00E0\u006E\u0067\u0020\u0043\u00F4\u006E\u0067"
+    End If
+    Exit Sub
+    
+ErrHandle:
+    MsgBoxUniCore "\u0043\u00F3\u0020\u006C\u1ED7\u0069\u0020\u0078\u1EA3\u0079\u0020\u0072\u0061\u003A\u0020" & Err.Description, vbCritical, "\u004C\u1ED7\u0069"
+End Sub
+
 ' RIBBON CALLBACKS
 Public Sub Ribbon_OnAction(control As IRibbonControl)
     Select Case control.Id
@@ -725,6 +864,7 @@ Public Sub Ribbon_OnAction(control As IRibbonControl)
         Case "btnFixDValue": ShowFixDValueForm
         Case "btnChangeSeparators": ShowNumberSeparatorForm
         Case "btnUnhideRows": UnhideAndHighlightRows
+        Case "btnUnblockFile": UnblockMacroFile
         Case "btnBatchPrint": ShowBatchPrintForm
         Case "btnCheckUpdate": CheckForUpdates False
         
@@ -967,7 +1107,7 @@ Public Sub CheckForUpdates(Optional ByVal bSilent As Boolean = False)
     Dim ans As VbMsgBoxResult
     Dim updaterPath As String
     
-    currentVer = "2.5.0"
+    currentVer = "2.5.1"
     
     On Error Resume Next
     Application.EnableCancelKey = xlDisabled

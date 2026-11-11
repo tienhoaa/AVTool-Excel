@@ -2321,6 +2321,7 @@ ribbon_xml_2007 = """<customUI xmlns="http://schemas.microsoft.com/office/2006/0
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
           <button id="btnUnhideRows" label="Mở Dòng Ẩn Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnUnblockFile" label="Mở Khóa Macro" size="large" imageMso="MacroSecurity" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>
@@ -2376,6 +2377,7 @@ ribbon_xml_2010 = """<customUI xmlns="http://schemas.microsoft.com/office/2009/0
         <group id="grpSheetUtils" label="Tiện Ích Sheet &amp; Số">
           <button id="btnChangeSeparators" label="Đổi Dấu Số (, / .)" size="large" imageMso="CommaStyle" onAction="Ribbon_OnAction"/>
           <button id="btnUnhideRows" label="Mở Dòng Ẩn Bôi Màu" size="large" imageMso="OutlineShowDetail" onAction="Ribbon_OnAction"/>
+          <button id="btnUnblockFile" label="Mở Khóa Macro" size="large" imageMso="MacroSecurity" onAction="Ribbon_OnAction"/>
         </group>
         <group id="grpPrint" label="In Ấn">
           <button id="btnBatchPrint" label="In Nhiều Sheet" size="large" imageMso="FilePrintQuick" onAction="Ribbon_OnAction"/>

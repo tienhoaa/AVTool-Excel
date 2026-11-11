@@ -22,6 +22,7 @@
 | | **Sửa Lỗi Diễn Giải** | | Chuẩn hóa các dấu ngoặc hoặc ký tự sai trong diễn giải dự toán. |
 | | **Đổi Dấu Chấm/Phẩy** | | Mở form tùy chọn đổi dấu phân cách thập phân `.` thành `,` hoặc ngược lại. |
 | | **Mở Dòng Ẩn & Bôi Màu** | | Quét toàn bộ sheet hoặc cả file, mở tất cả dòng bị ẩn và tô màu vàng nhạt (RGB 255, 255, 153) để dễ kiểm soát sai sót/chi phí giấu. |
+| | **Mở Khóa Macro** | | Gỡ bỏ cờ chặn Mark-of-the-Web (Zone.Identifier) cho file Excel tải từ mạng. Hỗ trợ tự nạp lại file đang mở hoặc chọn nhiều file trên máy để mở khóa. |
 | | **In Hàng Loạt** | | Form chọn nhiều sheet, sắp xếp thứ tự in, Print Preview hoặc in hàng loạt. |
 | | **Cập Nhật Online** | | Kết nối máy chủ GitHub kiểm tra và tự tải bản cập nhật mới nhất. |
 | **Nội Suy & Bảng Tra** | **Nội Suy Ma Trận 2D** | | Chèn cú pháp và hướng dẫn nội suy 2 chiều song tuyến tính (Bilinear). |
